@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react';
+import { renderHook, act, waitFor } from '@testing-library/react';
 import { useNotifications } from '@/hooks/useNotifications';
 
 describe('useNotifications', () => {
@@ -130,6 +130,14 @@ describe('useNotifications', () => {
   it('should generate unique IDs for notifications', () => {
     const { result } = renderHook(() => useNotifications());
 
+    // Mock Date.now to return different values
+    const originalDateNow = Date.now;
+    let callCount = 0;
+    Date.now = jest.fn(() => {
+      callCount++;
+      return originalDateNow() + callCount;
+    });
+
     act(() => {
       result.current.addNotification({
         type: 'info',
@@ -148,6 +156,9 @@ describe('useNotifications', () => {
 
     const ids = result.current.notifications.slice(0, 2).map(n => n.id);
     expect(ids[0]).not.toBe(ids[1]);
+
+    // Restore original Date.now
+    Date.now = originalDateNow;
   });
 
   it('should maintain notification order (newest first)', () => {
