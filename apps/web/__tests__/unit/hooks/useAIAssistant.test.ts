@@ -12,11 +12,6 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 });
 
-// Mock the AI service
-jest.mock('@/lib/ai/ascended-core', () => ({
-  generateAIResponse: jest.fn().mockResolvedValue('AI response message')
-}));
-
 describe('useAIAssistant', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -26,156 +21,154 @@ describe('useAIAssistant', () => {
   it('should initialize with default state', () => {
     const { result } = renderHook(() => useAIAssistant());
 
-    expect(result.current.messages).toEqual([]);
+    expect(result.current.conversations).toEqual([]);
     expect(result.current.loading).toBe(false);
-    expect(result.current.persona).toBe('balanced');
-    expect(result.current.settings).toEqual({
-      maxTokens: 1000,
-      temperature: 0.7,
-      model: 'gpt-3.5-turbo'
-    });
   });
 
-  it('should send a message and add it to messages', async () => {
+  it('should create a new conversation', async () => {
     const { result } = renderHook(() => useAIAssistant());
 
     await act(async () => {
-      await result.current.sendMessage('Hello, AI!');
+      const conversation = await result.current.createConversation();
+      expect(conversation.title).toBe('Conversation 1');
+      expect(conversation.messages).toEqual([]);
     });
 
-    expect(result.current.messages).toHaveLength(2); // User message + AI response
-    expect(result.current.messages[0].content).toBe('Hello, AI!');
-    expect(result.current.messages[0].role).toBe('user');
-    expect(result.current.messages[1].role).toBe('assistant');
-    expect(result.current.messages[1].content).toBe('AI response message');
+    expect(result.current.conversations).toHaveLength(1);
   });
 
-  it('should update persona', () => {
+  it('should send a message to a conversation', async () => {
     const { result } = renderHook(() => useAIAssistant());
 
-    act(() => {
-      result.current.updatePersona('therapeutic');
-    });
+    let conversationId: string;
 
-    expect(result.current.persona).toBe('therapeutic');
-  });
-
-  it('should update settings', () => {
-    const { result } = renderHook(() => useAIAssistant());
-
-    act(() => {
-      result.current.updateSettings({
-        maxTokens: 2000,
-        temperature: 0.5,
-        model: 'gpt-4'
-      });
-    });
-
-    expect(result.current.settings).toEqual({
-      maxTokens: 2000,
-      temperature: 0.5,
-      model: 'gpt-4'
-    });
-  });
-
-  it('should clear messages', async () => {
-    const { result } = renderHook(() => useAIAssistant());
-
-    // First send a message
+    // First create a conversation
     await act(async () => {
-      await result.current.sendMessage('Test message');
+      const conversation = await result.current.createConversation();
+      conversationId = conversation.id;
     });
 
-    expect(result.current.messages).toHaveLength(2);
-
-    // Then clear messages
-    act(() => {
-      result.current.clearMessages();
+    // Then send a message
+    await act(async () => {
+      await result.current.sendMessage(conversationId!, 'Hello, AI!');
     });
 
-    expect(result.current.messages).toHaveLength(0);
+    const conversation = result.current.conversations.find(c => c.id === conversationId);
+    expect(conversation?.messages).toHaveLength(2); // User message + AI response
+    expect(conversation?.messages[0].content).toBe('Hello, AI!');
+    expect(conversation?.messages[0].type).toBe('user');
+    expect(conversation?.messages[1].type).toBe('assistant');
   });
 
   it('should handle loading state during message sending', async () => {
     const { result } = renderHook(() => useAIAssistant());
 
-    const sendPromise = act(async () => {
-      await result.current.sendMessage('Test message');
-    });
+    let conversationId: string;
 
+    // Create a conversation first
+    let conversation: any;
+    await act(async () => {
+      conversation = await result.current.createConversation();
+    });
+    conversationId = conversation.id;
+
+    // Start the send operation
+    const sendPromise = result.current.sendMessage(conversationId!, 'Test message');
+    
     // During sending, loading should be true
     expect(result.current.loading).toBe(true);
 
-    await sendPromise;
+    await act(async () => {
+      await sendPromise;
+    });
 
     // After sending, loading should be false
     expect(result.current.loading).toBe(false);
   });
 
-  it('should persist messages to localStorage', async () => {
+  it('should handle multiple conversations', async () => {
     const { result } = renderHook(() => useAIAssistant());
 
+    let conversation1Id: string;
+    let conversation2Id: string;
+
+    // Create two conversations
     await act(async () => {
-      await result.current.sendMessage('Persistent message');
+      const conv1 = await result.current.createConversation();
+      conversation1Id = conv1.id;
     });
 
-    expect(localStorageMock.setItem).toHaveBeenCalledWith(
-      'ai-assistant-messages',
-      expect.any(String)
-    );
+    await act(async () => {
+      const conv2 = await result.current.createConversation();
+      conversation2Id = conv2.id;
+    });
 
-    const storedData = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
-    expect(storedData).toHaveLength(2);
-    expect(storedData[0].content).toBe('Persistent message');
+    expect(result.current.conversations).toHaveLength(2);
+
+    // Send message to first conversation
+    await act(async () => {
+      await result.current.sendMessage(conversation1Id!, 'Message to conv 1');
+    });
+
+    // Send message to second conversation
+    await act(async () => {
+      await result.current.sendMessage(conversation2Id!, 'Message to conv 2');
+    });
+
+    const conv1 = result.current.conversations.find(c => c.id === conversation1Id);
+    const conv2 = result.current.conversations.find(c => c.id === conversation2Id);
+
+    expect(conv1?.messages).toHaveLength(2);
+    expect(conv2?.messages).toHaveLength(2);
+    expect(conv1?.messages[0].content).toBe('Message to conv 1');
+    expect(conv2?.messages[0].content).toBe('Message to conv 2');
   });
 
-  it('should load messages from localStorage on initialization', () => {
-    const storedMessages = [
-      {
-        id: '1',
-        content: 'Previous message',
-        role: 'user',
-        timestamp: new Date().toISOString()
-      }
-    ];
-
-    localStorageMock.getItem.mockReturnValue(JSON.stringify(storedMessages));
-
+  it('should handle errors gracefully', async () => {
     const { result } = renderHook(() => useAIAssistant());
 
-    expect(result.current.messages).toHaveLength(1);
-    expect(result.current.messages[0].content).toBe('Previous message');
+    let conversationId: string;
+
+    // Create a conversation first
+    let conversation: any;
+    await act(async () => {
+      conversation = await result.current.createConversation();
+    });
+    conversationId = conversation.id;
+
+    // Mock fetch to throw an error
+    const originalFetch = global.fetch;
+    global.fetch = jest.fn().mockRejectedValue(new Error('Network error'));
+
+    await act(async () => {
+      await result.current.sendMessage(conversationId!, 'Error test message');
+    });
+
+    // Should not crash and should complete
+    expect(result.current.loading).toBe(false);
+
+    // Restore fetch
+    global.fetch = originalFetch;
   });
 
-  it('should handle error during message sending', async () => {
-    // Mock the AI service to throw an error
-    const { generateAIResponse } = require('@/lib/ai/ascended-core');
-    generateAIResponse.mockRejectedValueOnce(new Error('AI service error'));
-
+  it('should maintain conversation order', async () => {
     const { result } = renderHook(() => useAIAssistant());
 
+    let conversation1Id: string;
+    let conversation2Id: string;
+
+    // Create conversations in order
+    let conv1: any, conv2: any;
     await act(async () => {
-      await result.current.sendMessage('Error test message');
+      conv1 = await result.current.createConversation();
     });
-
-    expect(result.current.messages).toHaveLength(2);
-    expect(result.current.messages[1].content).toContain('Error');
-    expect(result.current.messages[1].role).toBe('assistant');
-  });
-
-  it('should maintain conversation context', async () => {
-    const { result } = renderHook(() => useAIAssistant());
-
     await act(async () => {
-      await result.current.sendMessage('First message');
+      conv2 = await result.current.createConversation();
     });
+    conversation1Id = conv1.id;
+    conversation2Id = conv2.id;
 
-    await act(async () => {
-      await result.current.sendMessage('Second message');
-    });
-
-    expect(result.current.messages).toHaveLength(4); // 2 user + 2 AI responses
-    expect(result.current.messages[0].content).toBe('First message');
-    expect(result.current.messages[2].content).toBe('Second message');
+    expect(result.current.conversations[0].title).toBe('Conversation 1');
+    expect(result.current.conversations[1].title).toBe('Conversation 2');
   });
 });

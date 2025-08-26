@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
+import React from 'react';
 
 // Mock global objects
-global.TextEncoder = TextEncoder;
+global.TextEncoder = TextEncoder as any;
 global.TextDecoder = TextDecoder as any;
 
 // Mock window.matchMedia
@@ -26,7 +27,11 @@ global.IntersectionObserver = class IntersectionObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-};
+  root: null = null;
+  rootMargin: string = '';
+  thresholds: ReadonlyArray<number> = [];
+  takeRecords() { return []; }
+} as any;
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -146,7 +151,7 @@ jest.mock('next/navigation', () => ({
 
 // Mock all context providers
 jest.mock('@/context/AuthContext', () => ({
-  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => React.createElement('div', { 'data-testid': 'auth-provider' }, children),
   useAuth: () => ({
     user: { id: '1', email: 'test@example.com', name: 'Test User' },
     isAuthenticated: true,
@@ -157,7 +162,7 @@ jest.mock('@/context/AuthContext', () => ({
 }));
 
 jest.mock('@/context/FinanceContext', () => ({
-  FinanceProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="finance-provider">{children}</div>,
+  FinanceProvider: ({ children }: { children: React.ReactNode }) => React.createElement('div', { 'data-testid': 'finance-provider' }, children),
   useFinance: () => ({
     budgets: [],
     transactions: [],
@@ -179,7 +184,7 @@ jest.mock('@/context/FinanceContext', () => ({
 }));
 
 jest.mock('@/context/AIAssistantContext', () => ({
-  AIAssistantProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="ai-assistant-provider">{children}</div>,
+  AIAssistantProvider: ({ children }: { children: React.ReactNode }) => React.createElement('div', { 'data-testid': 'ai-assistant-provider' }, children),
   useAIAssistant: () => ({
     messages: [],
     loading: false,
@@ -371,8 +376,5 @@ export const mockTransactions = [
   },
 ];
 
-export const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div data-testid="test-wrapper">
-    {children}
-  </div>
-);
+export const TestWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => 
+  React.createElement('div', { 'data-testid': 'test-wrapper' }, children);

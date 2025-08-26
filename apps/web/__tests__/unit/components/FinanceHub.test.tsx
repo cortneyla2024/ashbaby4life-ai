@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import FinanceHub from '@/components/finance/FinanceHub';
+import { FinanceHub } from '@/components/finance/FinanceHub';
 import { AuthProvider } from '@/context/AuthContext';
 import { FinanceProvider } from '@/context/FinanceContext';
 import { ToasterProvider } from '@/components/ui/Toaster';
