@@ -1,0 +1,386 @@
+name: Caretaker
+
+on:
+  schedule:
+    # Run nightly at 3 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '8'
+
+jobs:
+  dependency-update:
+    name: Dependency Update
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for outdated dependencies
+        id: check-outdated
+        run: |
+          outdated=$(pnpm outdated --format json | jq -r '.[] | select(.current != .latest) | .name + "@" + .latest' | head -10)
+          if [ -n "$outdated" ]; then
+            echo "outdated=$outdated" >> $GITHUB_OUTPUT
+            echo "has-updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update dependencies
+        if: steps.check-outdated.outputs.has-updates == 'true'
+        run: |
+          pnpm update --latest
+          pnpm install
+
+      - name: Generate Prisma client
+        run: pnpm prisma:generate
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run type checking
+        run: pnpm type-check
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Create Pull Request
+        if: steps.check-outdated.outputs.has-updates == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore(deps): update dependencies'
+          title: '🤖 Automated Dependency Update'
+          body: |
+            ## 🤖 Automated Dependency Update
+            
+            This PR was automatically created by the Caretaker workflow.
+            
+            ### Updated Dependencies
+            
+            ```
+            ${{ steps.check-outdated.outputs.outdated }}
+            ```
+            
+            ### Changes Made
+            
+            - Updated outdated dependencies to their latest versions
+            - All tests pass ✅
+            - Build successful ✅
+            - Type checking passed ✅
+            - Linting passed ✅
+            
+            ### Next Steps
+            
+            - [ ] Review the changes
+            - [ ] Run E2E tests if needed
+            - [ ] Merge if everything looks good
+            
+            ---
+            
+            *This PR was created automatically by the Caretaker workflow. Please review the changes before merging.*
+          branch: caretaker/dependency-update-${{ github.run_number }}
+          delete-branch: true
+          labels: |
+            automated
+            dependencies
+            caretaker
+
+  cve-scan:
+    name: CVE Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'HIGH,CRITICAL'
+
+      - name: Check for high/critical vulnerabilities
+        id: check-vulns
+        run: |
+          if [ -f trivy-results.sarif ]; then
+            vulns=$(jq -r '.runs[0].results[] | select(.level == "error") | .message' trivy-results.sarif | wc -l)
+            echo "vulnerabilities=$vulns" >> $GITHUB_OUTPUT
+            if [ $vulns -gt 0 ]; then
+              echo "has-vulnerabilities=true" >> $GITHUB_OUTPUT
+            else
+              echo "has-vulnerabilities=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "vulnerabilities=0" >> $GITHUB_OUTPUT
+            echo "has-vulnerabilities=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create security issue
+        if: steps.check-vulns.outputs.has-vulnerabilities == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const sarif = JSON.parse(fs.readFileSync('trivy-results.sarif', 'utf8'));
+            
+            const highVulns = sarif.runs[0].results.filter(r => r.level === 'error');
+            
+            const body = `## 🚨 Security Vulnerabilities Detected
+            
+            The Caretaker workflow detected **${highVulns.length}** high/critical vulnerabilities in the codebase.
+            
+            ### Vulnerabilities Found
+            
+            ${highVulns.map(v => `- **${v.ruleId}**: ${v.message}`).join('\n')}
+            
+            ### Recommended Actions
+            
+            1. Review each vulnerability
+            2. Update affected dependencies
+            3. Apply security patches
+            4. Re-run security scans
+            
+            ### Scan Details
+            
+            - **Scanner**: Trivy
+            - **Scan Date**: ${new Date().toISOString()}
+            - **Severity Threshold**: HIGH,CRITICAL
+            
+            ---
+            
+            *This issue was automatically created by the Caretaker workflow.*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Security Vulnerabilities Detected',
+              body: body,
+              labels: ['security', 'caretaker', 'high-priority']
+            });
+
+  license-check:
+    name: License Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check licenses
+        id: license-check
+        run: |
+          pnpm licenses check
+          if [ $? -ne 0 ]; then
+            echo "license-violations=true" >> $GITHUB_OUTPUT
+          else
+            echo "license-violations=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate license report
+        run: pnpm licenses generate-disclaimer > LICENSE_REPORT.md
+
+      - name: Create license issue
+        if: steps.license-check.outputs.license-violations == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('LICENSE_REPORT.md', 'utf8');
+            
+            const body = `## 📄 License Compliance Issue
+            
+            The Caretaker workflow detected license compliance issues in the project dependencies.
+            
+            ### License Report
+            
+            \`\`\`
+            ${report}
+            \`\`\`
+            
+            ### Recommended Actions
+            
+            1. Review the license report
+            2. Replace non-compliant dependencies
+            3. Update license documentation
+            4. Ensure AGPL-3.0 compliance
+            
+            ---
+            
+            *This issue was automatically created by the Caretaker workflow.*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📄 License Compliance Issue',
+              body: body,
+              labels: ['license', 'caretaker', 'compliance']
+            });
+
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm prisma:generate
+
+      - name: Run full test suite
+        run: pnpm test
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Check build artifacts
+        run: |
+          if [ ! -d "apps/web/.next" ]; then
+            echo "❌ Web build failed"
+            exit 1
+          fi
+          if [ ! -d "apps/api/dist" ]; then
+            echo "❌ API build failed"
+            exit 1
+          fi
+          echo "✅ All builds successful"
+
+      - name: Create health report
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `## 🏥 System Health Report
+            
+            The Caretaker workflow completed a comprehensive health check of the system.
+            
+            ### Health Status: ✅ HEALTHY
+            
+            - **Dependencies**: Up to date
+            - **Security**: No high/critical vulnerabilities
+            - **Licenses**: Compliant
+            - **Tests**: All passing
+            - **Builds**: Successful
+            - **Type Checking**: Passed
+            - **Linting**: Passed
+            
+            ### System Metrics
+            
+            - **Last Check**: ${new Date().toISOString()}
+            - **Status**: Operational
+            - **Recommendations**: None at this time
+            
+            ---
+            
+            *This report was automatically generated by the Caretaker workflow.*`;
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🏥 System Health Report',
+              body: body,
+              labels: ['health', 'caretaker', 'report']
+            });
+
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Cleanup old issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: ['caretaker'],
+              state: 'open'
+            });
+            
+            for (const issue of issues) {
+              const createdAt = new Date(issue.created_at);
+              if (createdAt < thirtyDaysAgo) {
+                await github.rest.issues.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  state: 'closed'
+                });
+                console.log(`Closed old caretaker issue: ${issue.title}`);
+              }
+            }

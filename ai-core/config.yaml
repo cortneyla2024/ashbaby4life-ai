@@ -1,0 +1,337 @@
+# =============================================================================
+# CareConnect v5.0 - AI Engine Configuration
+# =============================================================================
+
+# AI Engine Configuration
+ai_engine:
+  # Model Configuration
+  model:
+    # Architecture settings
+    vocab_size: 50257
+    hidden_size: 768
+    num_layers: 12
+    num_attention_heads: 12
+    intermediate_size: 3072
+    max_position_embeddings: 2048
+    dropout: 0.1
+    layer_norm_epsilon: 1e-5
+    
+    # Generation parameters
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 50
+    max_length: 2048
+    repetition_penalty: 1.1
+    length_penalty: 1.0
+    no_repeat_ngram_size: 3
+    early_stopping: true
+    
+    # Personality settings
+    personality:
+      empathy_level: "high"  # low, medium, high
+      creativity_level: "medium"  # low, medium, high
+      analytical_level: "high"  # low, medium, high
+      humor_enabled: true
+      formality_level: "medium"  # casual, medium, formal
+    
+    # Memory and context
+    memory:
+      memory_size: 1000
+      context_window: 4096
+      max_conversation_length: 100
+      short_term_memory_size: 50
+      long_term_memory_size: 500
+    
+    # Special tokens
+    special_tokens:
+      pad_token_id: 0
+      bos_token_id: 1
+      eos_token_id: 2
+      unk_token_id: 3
+    
+    # Model paths
+    paths:
+      model_path: "./checkpoints/steward-v5.pt"
+      config_path: "./config/model_config.json"
+      tokenizer_path: "./tokenizers/steward-tokenizer"
+      vocabulary_path: "./data/vocabulary.json"
+
+  # Training Configuration
+  training:
+    # Basic training parameters
+    epochs: 10
+    batch_size: 4
+    learning_rate: 1e-4
+    weight_decay: 0.01
+    gradient_clip: 1.0
+    warmup_steps: 1000
+    
+    # Data parameters
+    max_length: 2048
+    validation_split: 0.2
+    test_split: 0.1
+    
+    # Optimization
+    optimizer: "adamw"  # adam, adamw, sgd
+    scheduler: "cosine"  # cosine, linear, onecycle
+    early_stopping_patience: 3
+    save_interval: 5
+    
+    # Advanced training
+    mixed_precision: true
+    gradient_accumulation_steps: 1
+    dataloader_workers: 0
+    
+    # Checkpointing
+    save_best_model: true
+    save_checkpoints: true
+    checkpoint_dir: "./checkpoints"
+    max_checkpoints: 5
+
+  # Evaluation Configuration
+  evaluation:
+    # Evaluation parameters
+    batch_size: 8
+    max_length: 2048
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 50
+    num_samples: 100
+    
+    # Metrics to calculate
+    metrics:
+      - "perplexity"
+      - "accuracy"
+      - "bleu"
+      - "rouge"
+      - "semantic_similarity"
+    
+    # Output settings
+    save_predictions: true
+    generate_samples: true
+    save_plots: true
+    
+    # Evaluation data
+    test_data_path: "./data/test_data.json"
+    evaluation_output_dir: "./evaluation_results"
+
+  # Prediction Configuration
+  prediction:
+    # Generation parameters
+    max_length: 100
+    temperature: 0.7
+    top_p: 0.9
+    top_k: 50
+    num_beams: 1
+    do_sample: true
+    repetition_penalty: 1.1
+    length_penalty: 1.0
+    no_repeat_ngram_size: 3
+    early_stopping: true
+    
+    # Token settings
+    pad_token_id: 0
+    eos_token_id: 2
+    batch_size: 1
+    
+    # Advanced features
+    enable_sentiment_analysis: true
+    enable_context_awareness: true
+    enable_personality_adjustment: true
+    
+    # History management
+    max_history_size: 1000
+    save_prediction_history: true
+    history_file: "./prediction_history.json"
+
+  # Preprocessing Configuration
+  preprocessing:
+    # Text processing
+    max_length: 2048
+    min_length: 10
+    vocab_size: 50257
+    special_tokens: ["<pad>", "<bos>", "<eos>", "<unk>"]
+    
+    # Text cleaning
+    text_cleaning: true
+    lowercase: true
+    remove_punctuation: false
+    remove_numbers: false
+    remove_stopwords: false
+    lemmatization: false
+    
+    # Data augmentation
+    data_augmentation: true
+    augmentation_factor: 2
+    synonym_replacement: true
+    word_swap: true
+    sentence_structure_change: true
+    
+    # Dataset splitting
+    validation_split: 0.2
+    test_split: 0.1
+    random_seed: 42
+    
+    # Output settings
+    save_processed_data: true
+    create_vocabulary: true
+    save_statistics: true
+
+  # Memory Management
+  memory_management:
+    # Memory limits
+    max_memory_usage: "8GB"
+    gpu_memory_fraction: 0.8
+    
+    # Cache settings
+    enable_model_cache: true
+    cache_size: 1000
+    cache_ttl: 3600  # seconds
+    
+    # Cleanup
+    auto_cleanup: true
+    cleanup_interval: 300  # seconds
+    max_log_files: 10
+
+  # Logging and Monitoring
+  logging:
+    # Log levels
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    file_logging: true
+    console_logging: true
+    
+    # Log files
+    log_dir: "./logs"
+    max_log_size: "10MB"
+    max_log_files: 5
+    
+    # Performance monitoring
+    enable_performance_logging: true
+    log_prediction_times: true
+    log_memory_usage: true
+    
+    # Error tracking
+    enable_error_tracking: true
+    save_error_details: true
+
+  # Security and Privacy
+  security:
+    # Input validation
+    validate_inputs: true
+    max_input_length: 10000
+    sanitize_inputs: true
+    
+    # Output filtering
+    filter_outputs: true
+    content_moderation: true
+    profanity_filter: true
+    
+    # Data protection
+    encrypt_sensitive_data: true
+    anonymize_user_data: true
+    data_retention_days: 30
+    
+    # Access control
+    require_authentication: true
+    rate_limiting: true
+    max_requests_per_minute: 60
+
+  # Performance Optimization
+  performance:
+    # Hardware optimization
+    use_gpu: true
+    use_mixed_precision: true
+    optimize_memory: true
+    
+    # Model optimization
+    enable_model_quantization: false
+    enable_model_pruning: false
+    enable_dynamic_batching: true
+    
+    # Inference optimization
+    enable_caching: true
+    enable_parallel_processing: true
+    max_concurrent_requests: 10
+    
+    # Resource limits
+    max_cpu_usage: 0.8
+    max_gpu_usage: 0.9
+    max_memory_usage: "8GB"
+
+  # Integration Settings
+  integration:
+    # API settings
+    api_enabled: true
+    api_host: "localhost"
+    api_port: 8001
+    api_timeout: 30
+    
+    # WebSocket settings
+    websocket_enabled: true
+    websocket_host: "localhost"
+    websocket_port: 8002
+    
+    # Database settings
+    database_enabled: false
+    database_url: "sqlite:///ai_engine.db"
+    
+    # External services
+    enable_external_apis: false
+    external_api_timeout: 10
+    
+    # File storage
+    enable_file_storage: true
+    storage_path: "./storage"
+    max_file_size: "100MB"
+
+  # Development and Testing
+  development:
+    # Debug mode
+    debug_mode: false
+    enable_debug_logging: false
+    save_debug_info: false
+    
+    # Testing
+    enable_unit_tests: true
+    enable_integration_tests: true
+    test_data_path: "./tests/data"
+    
+    # Profiling
+    enable_profiling: false
+    profile_output_dir: "./profiles"
+    
+    # Hot reloading
+    enable_hot_reload: false
+    watch_files: true
+
+# Environment-specific overrides
+environments:
+  development:
+    ai_engine:
+      logging:
+        level: "DEBUG"
+      development:
+        debug_mode: true
+        enable_debug_logging: true
+  
+  production:
+    ai_engine:
+      logging:
+        level: "WARNING"
+      security:
+        require_authentication: true
+        rate_limiting: true
+      performance:
+        enable_model_quantization: true
+        enable_model_pruning: true
+  
+  testing:
+    ai_engine:
+      logging:
+        level: "INFO"
+      development:
+        enable_unit_tests: true
+        enable_integration_tests: true
+      training:
+        epochs: 1
+        batch_size: 2

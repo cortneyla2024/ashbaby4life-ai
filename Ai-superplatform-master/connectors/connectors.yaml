@@ -1,0 +1,98 @@
+---
+version: 1
+defaults:
+  consent_ttl_days: 180
+  purpose_binding_required: true
+  min_scope: "read"
+connectors:
+  local_vault:
+    type: fs
+    scope: read_write
+    config:
+      baseDir: "vault/"
+  webdav:
+    type: webdav
+    scope: read_write
+    config:
+      baseUrl: "http://localhost:8080/remote.php/dav/files/demo"
+      username: "demo"
+      password: "demo"
+  caldav:
+    type: caldav
+    scope: read_write
+    config:
+      baseUrl: "http://localhost:5232"
+  carddav:
+    type: carddav
+    scope: read_write
+    config:
+      baseUrl: "http://localhost:5232"
+  matrix:
+    type: matrix
+    scope: read_write
+    config:
+      homeserver: "http://localhost:8008"
+  smtp:
+    type: smtp
+    scope: send_only
+    config:
+      host: "localhost"
+      port: 1025
+      secure: false
+  imap:
+    type: imap
+    scope: read_only
+    config:
+      host: "localhost"
+      port: 1143
+      tls: false
+  activitypub:
+    type: activitypub
+    scope: read_write
+    config:
+      inbox: true
+      outbox: true
+  rss:
+    type: rss
+    scope: read_only
+    config: {}
+  gitea:
+    type: gitea
+    scope: read_write
+    config:
+      baseUrl: "http://localhost:3002"
+  prometheus:
+    type: prometheus
+    scope: read_only
+    config:
+      baseUrl: "http://localhost:9090"
+  grafana:
+    type: grafana
+    scope: read_only
+    config:
+      baseUrl: "http://localhost:3003"
+  loki:
+    type: loki
+    scope: read_only
+    config:
+      baseUrl: "http://localhost:3100"
+  home_assistant:
+    type: home_assistant
+    scope: read_write
+    config:
+      baseUrl: "http://localhost:8123"
+  valhalla:
+    type: valhalla
+    scope: read_only
+    config:
+      baseUrl: "http://localhost:8002"
+  nominatim:
+    type: nominatim
+    scope: read_only
+    config:
+      baseUrl: "http://localhost:8001"
+  uptime_kuma:
+    type: uptime_kuma
+    scope: read_only
+    config:
+      baseUrl: "http://localhost:3004"

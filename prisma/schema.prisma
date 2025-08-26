@@ -1,0 +1,266 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  avatar    String?
+  aiPersona String?  @default("balanced")
+  notifications Boolean @default(true)
+  timezone  String   @default("UTC")
+  language  String   @default("en")
+  theme     String   @default("light")
+  role      String   @default("USER") // USER, ADMIN, MODERATOR
+  tier      String   @default("FREE") // FREE, BASIC, PREMIUM, ENTERPRISE
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  sessions     Session[]
+  fileRecords  FileRecord[]
+  posts        Post[]
+  comments     Comment[]
+  reactions    Reaction[]
+  messages     Message[]
+  userNotifications Notification[]
+  settings     UserSettings?
+  healthData   HealthData[]
+  financialData FinancialData[]
+  learningData LearningData[]
+  creativeData CreativeData[]
+  socialData   SocialData[]
+  automationData AutomationData[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model FileRecord {
+  id           String   @id @default(cuid())
+  userId       String
+  filename     String
+  originalName String
+  filePath     String
+  fileSize     Int
+  mimeType     String
+  extension    String
+  privacy      String   @default("private") // private, public, shared
+  category     String   @default("general")
+  tags         String   // Comma-separated tags
+  metadata     String   // JSON string of extracted metadata, thumbnails, transcripts, AI analysis
+  uploadedAt   DateTime @default(now())
+  lastAccessed DateTime @default(now())
+  accessCount  Int      @default(0)
+  isEncrypted  Boolean  @default(false)
+  checksum     String?  // SHA256 hash for integrity verification
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("file_records")
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  category    String
+  tags        String   // Comma-separated tags
+  isAnonymous Boolean  @default(false)
+  allowComments Boolean @default(true)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comments  Comment[]
+  reactions Reaction[]
+
+  @@map("posts")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  parentId  String?  // For nested comments
+  isAnonymous Boolean @default(false)
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reactions Reaction[]
+
+  @@map("comments")
+}
+
+model Reaction {
+  id       String   @id @default(cuid())
+  type     String   // like, love, laugh, etc.
+  userId   String
+  postId   String?
+  commentId String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post    Post?   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId, type])
+  @@unique([userId, commentId, type])
+  @@map("reactions")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  type      String   @default("text") // text, voice, video, image
+  senderId  String
+  receiverId String?
+  roomId    String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  type      String   // info, success, warning, error
+  isRead    Boolean  @default(false)
+  userId    String
+  createdAt DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model UserSettings {
+  id                String @id @default(cuid())
+  userId            String @unique
+  theme             String @default("light")
+  language          String @default("en")
+  timezone          String @default("UTC")
+  notifications     String // JSON string of notification preferences
+  privacy           String // JSON string of privacy settings
+  accessibility     String // JSON string of accessibility settings
+  aiPreferences     String // JSON string of AI interaction preferences
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
+
+model HealthData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // mood, sleep, exercise, etc.
+  data      String   // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("health_data")
+}
+
+model FinancialData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // transaction, budget, goal, etc.
+  data      String   // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("financial_data")
+}
+
+model LearningData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // course, skill, progress, etc.
+  data      String   // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("learning_data")
+}
+
+model CreativeData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // project, inspiration, content, etc.
+  data      String   // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("creative_data")
+}
+
+model SocialData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // connection, event, interaction, etc.
+  data      String   // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("social_data")
+}
+
+model AutomationData {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // routine, trigger, action, etc.
+  data      String   // JSON string
+  timestamp DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("automation_data")
+}

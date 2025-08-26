@@ -1,0 +1,298 @@
+# =============================================================================
+# CareConnect v5.0 Global Configuration
+# =============================================================================
+
+# =============================================================================
+# SYSTEM CONFIGURATION
+# =============================================================================
+system:
+  name: "CareConnect v5.0"
+  version: "5.0.0"
+  environment: "development"
+  debug: true
+  maintenance_mode: false
+  developer_mode: false
+
+# =============================================================================
+# PATHS & DIRECTORIES
+# =============================================================================
+paths:
+  data: "./data"
+  logs: "./logs"
+  checkpoints: "./ai-core/checkpoints"
+  uploads: "./uploads"
+  backups: "./backups"
+  temp: "./temp"
+  cache: "./cache"
+  telemetry: "./telemetry.json"
+  analytics: "./analytics"
+
+# =============================================================================
+# NETWORK & PORTS
+# =============================================================================
+ports:
+  frontend: 3000
+  backend: 3001
+  ai_engine: 3002
+  metrics: 9090
+  debug: 9229
+
+hosts:
+  frontend: "localhost"
+  backend: "localhost"
+  ai_engine: "localhost"
+  allowed_origins: ["http://localhost:3000", "http://127.0.0.1:3000"]
+
+# =============================================================================
+# AI ENGINE SETTINGS
+# =============================================================================
+ai:
+  model: "steward-v5"
+  model_path: "./ai-core/checkpoints/steward-v5.pt"
+  max_tokens: 2048
+  temperature: 0.7
+  top_p: 0.9
+  frequency_penalty: 0.0
+  presence_penalty: 0.0
+  batch_size: 4
+  max_length: 2048
+  stop_sequences: ["\n\n", "Human:", "Assistant:"]
+  
+  # Personality settings
+  personality: "balanced"
+  empathy_level: "high"
+  creativity_level: "medium"
+  analytical_level: "high"
+  humor_enabled: true
+  formality_level: "medium"
+  
+  # Learning settings
+  real_time_learning: true
+  learning_rate: 0.001
+  memory_size: 1000
+  context_window: 4096
+
+# =============================================================================
+# DATABASE CONFIGURATION
+# =============================================================================
+database:
+  type: "sqlite"
+  path: "./data/careconnect.db"
+  backup_interval: 86400
+  backup_path: "./backups/"
+  encryption_enabled: true
+  migration_auto: true
+  connection_limit: 10
+  timeout: 30000
+
+# =============================================================================
+# SECURITY SETTINGS
+# =============================================================================
+security:
+  jwt_secret: "your-super-secret-jwt-key-change-this-in-production"
+  session_secret: "another-super-secret-session-key-change-this"
+  cookie_secret: "your-cookie-secret-key-change-this-in-production"
+  encryption_key: "your-aes-256-encryption-key-32-chars-long"
+  bcrypt_rounds: 12
+  rate_limit_enabled: true
+  rate_limit_window: 900000
+  rate_limit_max_requests: 100
+  cors_enabled: true
+  csrf_protection: true
+
+# =============================================================================
+# FEATURE FLAGS
+# =============================================================================
+features:
+  voice_enabled: true
+  image_processing: true
+  real_time_learning: true
+  auto_backup: true
+  notifications: true
+  analytics: true
+  multi_user: false
+  experimental_features: false
+  beta_features: false
+
+# =============================================================================
+# PERFORMANCE & CACHING
+# =============================================================================
+performance:
+  cache_enabled: true
+  cache_ttl: 3600
+  cache_max_size: 100
+  compression_enabled: true
+  max_memory_usage: 2048
+  max_cpu_usage: 80
+  disk_space_threshold: 90
+  auto_cleanup_enabled: true
+  cleanup_interval: 86400000
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+logging:
+  level: "info"
+  file_path: "./logs/"
+  max_size: 10485760
+  max_files: 5
+  level_console: "info"
+  level_file: "debug"
+  format: "json"
+  timestamp_format: "ISO"
+
+# =============================================================================
+# TELEMETRY & ANALYTICS
+# =============================================================================
+telemetry:
+  enabled: true
+  path: "./telemetry.json"
+  retention_days: 365
+  anonymization_enabled: true
+  export_enabled: true
+  deletion_enabled: true
+
+analytics:
+  enabled: true
+  path: "./analytics/"
+  metrics_enabled: true
+  performance_monitoring: true
+  error_reporting_enabled: true
+
+# =============================================================================
+# FILE STORAGE
+# =============================================================================
+storage:
+  upload_path: "./uploads/"
+  max_file_size: 10485760
+  allowed_file_types:
+    - "image/jpeg"
+    - "image/png"
+    - "image/gif"
+    - "text/plain"
+    - "application/pdf"
+  backup_enabled: true
+  backup_schedule: "0 2 * * *"
+  backup_retention_days: 30
+  backup_compression: true
+  backup_encryption: true
+
+# =============================================================================
+# NOTIFICATIONS
+# =============================================================================
+notifications:
+  sound_enabled: true
+  vibration_enabled: true
+  priority: "normal"
+  retention_days: 7
+  channels:
+    - "in_app"
+    - "desktop"
+    - "email"
+
+# =============================================================================
+# USER PREFERENCES (Defaults)
+# =============================================================================
+user_preferences:
+  default_theme: "light"
+  default_language: "en"
+  default_timezone: "UTC"
+  default_currency: "USD"
+  default_date_format: "YYYY-MM-DD"
+  default_time_format: "HH:mm:ss"
+  privacy_mode_enabled: true
+  data_retention_days: 365
+
+# =============================================================================
+# MONITORING & HEALTH CHECKS
+# =============================================================================
+monitoring:
+  health_check_enabled: true
+  health_check_interval: 30000
+  metrics_enabled: true
+  alerting_enabled: false
+  performance_thresholds:
+    response_time: 1000
+    memory_usage: 80
+    cpu_usage: 80
+    disk_usage: 90
+
+# =============================================================================
+# INTEGRATION SETTINGS
+# =============================================================================
+integrations:
+  webhook_enabled: false
+  webhook_url: ""
+  api_rate_limit: 1000
+  api_version: "v1"
+  api_docs_enabled: true
+  external_services: []
+
+# =============================================================================
+# DEVELOPMENT & DEBUGGING
+# =============================================================================
+development:
+  debug_enabled: true
+  debug_port: 9229
+  hot_reload_enabled: true
+  source_maps_enabled: true
+  profiling_enabled: false
+  test_mode: false
+
+# =============================================================================
+# MODULES CONFIGURATION
+# =============================================================================
+modules:
+  mental_health:
+    enabled: true
+    mood_tracking: true
+    stress_monitoring: true
+    meditation_guidance: true
+    sleep_analysis: true
+    
+  financial_wellness:
+    enabled: true
+    budget_tracking: true
+    expense_categorization: true
+    goal_setting: true
+    investment_guidance: true
+    
+  personal_growth:
+    enabled: true
+    skill_tracking: true
+    learning_paths: true
+    goal_achievement: true
+    habit_formation: true
+    
+  creative_expression:
+    enabled: true
+    writing_assistance: true
+    art_guidance: true
+    music_composition: true
+    project_management: true
+    
+  social_connection:
+    enabled: true
+    relationship_tracking: true
+    communication_improvement: true
+    community_engagement: true
+    networking_support: true
+    
+  automation_routines:
+    enabled: true
+    smart_scheduling: true
+    task_automation: true
+    routine_optimization: true
+    productivity_enhancement: true
+
+# =============================================================================
+# ADVANCED SETTINGS
+# =============================================================================
+advanced:
+  experimental_features: false
+  beta_features: false
+  maintenance_mode: false
+  recovery_mode: false
+  emergency_mode: false
+  debug_level: "info"
+  verbose_logging: false

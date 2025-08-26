@@ -1,0 +1,709 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String?   @unique
+  name          String?
+  password      String
+  role          String    @default("Member") // Owner, Admin, Member, Viewer
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  memberships   Membership[]
+  budgets       Budget[]
+  transactions  Transaction[]
+  financialGoals FinancialGoal[]
+  moodEntries   MoodEntry[]
+  assessments   MentalHealthAssessment[]
+  copingStrategies CopingStrategy[]
+  communities   CommunityMember[]
+  automations   AutomationRoutine[]
+  aiPersonas    AIPersona[]
+  familyCircles FamilyCircleMember[]
+  posts         Post[]
+  comments      Comment[]
+  events        EventParticipant[]
+  habits        Habit[]
+  skills        Skill[]
+  resources     LearningResource[]
+  resourcesCreated Resource[]
+  sessions      Session[]
+  creativeProjects CreativeProject[]
+  generatedAssets GeneratedAsset[]
+  mediaPreferences MediaPreference[]
+  analyticsEvents AnalyticsEvent[]
+  proactiveInsights ProactiveInsight[]
+  generatedActivities GeneratedActivity[]
+  generatedGames GeneratedGame[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  integrationAccounts IntegrationAccount[]
+  dataProvenance DataProvenance[]
+  calendarItems CalendarItem[]
+  fileItems     FileItem[]
+  messages      Message[]
+  journalEntries JournalEntry[]
+  ownedCommunities Community[] @relation("CommunityOwner")
+}
+
+model Budget {
+  id          String   @id @default(cuid())
+  name        String
+  category    String   // food, entertainment, transportation, etc.
+  amount      Float
+  spent       Float    @default(0)
+  period      String   // monthly, yearly, etc.
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  amount      Float
+  description String
+  category    String
+  type        String   // income, expense
+  date        DateTime
+  notes       String?
+  userId      String
+  budgetId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  budget      Budget?  @relation(fields: [budgetId], references: [id])
+}
+
+model FinancialGoal {
+  id          String   @id @default(cuid())
+  name        String
+  targetAmount Float
+  currentAmount Float  @default(0)
+  deadline    DateTime?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MoodEntry {
+  id          String   @id @default(cuid())
+  mood        Int      // 1-10 scale
+  notes       String?
+  activities  String[] // array of activities
+  aiInsight   String?  // AI-generated insight
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model JournalEntry {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  mood        String?  // Optional mood tag
+  tags        String[] // Array of tags
+  isPrivate   Boolean  @default(true)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Community {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  isPublic    Boolean  @default(true)
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner       User     @relation("CommunityOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     CommunityMember[]
+  posts       Post[]
+  events      Event[]
+}
+
+model CommunityMember {
+  id          String   @id @default(cuid())
+  userId      String
+  communityId String
+  role        String   @default("member") // admin, moderator, member
+  joinedAt    DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community   Community @relation(fields: [communityId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, communityId])
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  content     String
+  userId      String
+  communityId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  community   Community? @relation(fields: [communityId], references: [id])
+  comments    Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String
+  userId    String
+  postId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  communityId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  community   Community? @relation(fields: [communityId], references: [id])
+  participants EventParticipant[]
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  eventType String
+  data      Json?
+  timestamp DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model ProactiveInsight {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // health, finance, productivity, social, etc.
+  title       String
+  description String
+  priority    String   // low, medium, high, critical
+  actionable  Boolean  @default(true)
+  isRead      Boolean  @default(false)
+  data        Json?    // Additional context data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EventParticipant {
+  id        String   @id @default(cuid())
+  userId    String
+  eventId   String
+  status    String   @default("pending") // going, not_going, maybe
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, eventId])
+}
+
+model AutomationRoutine {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  triggers    AutomationTrigger[]
+  actions     AutomationAction[]
+  logs        AutomationLog[]
+}
+
+model AIPersona {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  personality Json     // personality traits and characteristics
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FamilyCircle {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     FamilyCircleMember[]
+  guidedConversations GuidedConversation[]
+}
+
+model FamilyCircleMember {
+  id            String   @id @default(cuid())
+  userId        String
+  familyCircleId String
+  role          String   @default("member") // admin, member
+  joinedAt      DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyCircle  FamilyCircle @relation(fields: [familyCircleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, familyCircleId])
+}
+
+model Habit {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  frequency   String   // daily, weekly, monthly
+  goal        String?  // target goal for the habit
+  streak      Int      @default(0)
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs        HabitLog[]
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  date      DateTime
+  completed Boolean  @default(false)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  habit      Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, date])
+}
+
+model Skill {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  level          Int      @default(1) // 1-10 scale
+  masteryLevel   Int      @default(0) // 0-100 scale
+  category       String?
+  aiLearningPlan String?
+  userId         String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resources      LearningResource[]
+}
+
+model LearningResource {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String?
+  type        String   // video, article, course, book, etc.
+  notes       String?
+  aiSummary   String?
+  skillId     String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  skill       Skill?   @relation(fields: [skillId], references: [id])
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String?
+  type        String   // article, video, book, etc.
+  category    String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Creative Expression models
+model CreativeProject {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  type        String           // "AI_ART_COLLECTION", "WRITING_PROJECT"
+  assets      GeneratedAsset[]
+  createdAt   DateTime         @default(now())
+}
+
+model GeneratedAsset {
+  id        String          @id @default(cuid())
+  projectId String
+  project   CreativeProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String          // "IMAGE", "TEXT"
+  prompt    String
+  content   String          // URL for images, or the text itself
+  createdAt DateTime        @default(now())
+}
+
+model MediaPreference {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type     String   // "MOVIE", "BOOK", "MUSIC_GENRE"
+  likes    String[] // List of titles or genres the user likes
+  dislikes String[] // List of titles or genres the user dislikes
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, type])
+}
+
+// System monitoring models
+model SystemHealthLog {
+  id        String   @id @default(cuid())
+  metric    String
+  value     Float
+  status    String   // OK, WARNING, CRITICAL
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model SecurityAuditLog {
+  id               String   @id @default(cuid())
+  auditType        String
+  result           String   // PASSED, FAILED, WARNING
+  remediationAction String?
+  createdAt        DateTime @default(now())
+}
+
+model PerformanceTrace {
+  id         String   @id @default(cuid())
+  operation  String
+  durationMs Int
+  isSlow     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+}
+
+// Dream Weaver models
+model GeneratedActivity {
+  id           String   @id @default(cuid())
+  userId       String
+  title        String
+  description  String
+  activityType String   // art_project, storytelling, scavenger_hunt, etc.
+  plan         String   // JSON or text content
+  materials    String   // JSON array of materials
+  duration     Int      // in minutes
+  isPublic     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model GeneratedGame {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  gameType    String   // puzzle, adventure, educational, etc.
+  rules       String   // JSON or text content
+  code        String?  // Generated code content
+  difficulty  String   // easy, medium, hard
+  duration    Int      // in minutes
+  assets      String?  // JSON string for game assets
+  isPublic    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Empathic Resonance models
+model GuidedConversation {
+  id          String   @id @default(cuid())
+  circleId    String
+  title       String
+  description String?
+  topic       String
+  facilitator String?  // AI or human facilitator
+  aiModerator String?  // AI-generated moderation content
+  status      String   // active, completed, paused
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  circle      FamilyCircle @relation(fields: [circleId], references: [id], onDelete: Cascade)
+  messages    ConversationMessage[]
+}
+
+model ConversationMessage {
+  id          String   @id @default(cuid())
+  conversationId String
+  senderId    String
+  content     String
+  messageType String   // text, audio, video, emoji
+  timestamp   DateTime @default(now())
+
+  conversation GuidedConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+// Organization and Membership models
+model Org {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  region      String
+  timezone    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  memberships Membership[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  orgId     String
+  role      String   @default("Member") // Owner, Admin, Member, Viewer
+  joinedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org       Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, orgId])
+}
+
+// Audit and Security models
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  resource    String
+  resourceId  String?
+  details     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // info, warning, error, success
+  title       String
+  message     String
+  isRead      Boolean  @default(false)
+  data        Json?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Integration and Connector models
+model IntegrationAccount {
+  id          String   @id @default(cuid())
+  userId      String
+  provider    String   // webdav, caldav, matrix, etc.
+  accountId   String
+  displayName String?
+  config      Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokens      ConnectorToken[]
+
+  @@unique([userId, provider, accountId])
+}
+
+model ConnectorToken {
+  id                  String   @id @default(cuid())
+  integrationAccountId String
+  type                String   // access, refresh, etc.
+  token               String
+  expiresAt           DateTime?
+  scopes              String[]
+  createdAt           DateTime @default(now())
+
+  integrationAccount  IntegrationAccount @relation(fields: [integrationAccountId], references: [id], onDelete: Cascade)
+}
+
+// Data Provenance and Privacy models
+model DataProvenance {
+  id          String   @id @default(cuid())
+  userId      String
+  dataType    String   // mood, finance, learning, etc.
+  source      String   // manual, imported, generated
+  sourceId    String?
+  consentGiven Boolean @default(false)
+  purpose     String
+  retentionPolicy String
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Calendar and File models
+model CalendarItem {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  description String?
+  startTime   DateTime
+  endTime     DateTime?
+  location    String?
+  isAllDay    Boolean  @default(false)
+  source      String   // local, caldav, etc.
+  sourceId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model FileItem {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  path        String
+  size        Int
+  mimeType    String
+  source      String   // local, webdav, etc.
+  sourceId    String?
+  tags        String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Messaging models
+model Message {
+  id          String   @id @default(cuid())
+  userId      String
+  channel     String   // matrix, email, etc.
+  channelId   String
+  content     String
+  messageType String   // text, audio, video, file
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Mental Health models
+model MentalHealthAssessment {
+  id          String   @id @default(cuid())
+  userId      String
+  type        String   // PHQ9, GAD7, etc.
+  answers     Int[]
+  score       Int?
+  interpretation String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CopingStrategy {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  category    String   // anxiety, stress, depression, etc.
+  content     String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Automation models
+model AutomationTrigger {
+  id          String   @id @default(cuid())
+  routineId   String
+  type        String   // schedule, event, condition
+  config      Json
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  routine     AutomationRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+}
+
+model AutomationAction {
+  id          String   @id @default(cuid())
+  routineId   String
+  type        String   // notification, data_update, api_call, etc.
+  config      Json
+  order       Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  routine     AutomationRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+}
+
+model AutomationLog {
+  id          String   @id @default(cuid())
+  routineId   String
+  triggerId   String?
+  actionId    String?
+  status      String   // success, failed, skipped
+  details     Json?
+  error       String?
+  createdAt   DateTime @default(now())
+
+  routine     AutomationRoutine @relation(fields: [routineId], references: [id], onDelete: Cascade)
+}

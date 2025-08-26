@@ -1,0 +1,145 @@
+# Default values for steward-omni-max
+replicaCount:
+  web: 2
+  api: 2
+  broker: 1
+  docs: 1
+
+image:
+  repository: ghcr.io/your-org/steward-omni-max
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: steward.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: steward-tls
+  #    hosts:
+  #      - steward.local
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Database configuration
+database:
+  type: postgresql
+  host: postgresql
+  port: 5432
+  name: steward
+  user: steward
+  password: ""
+  existingSecret: ""
+
+# Redis configuration
+redis:
+  host: redis
+  port: 6379
+  password: ""
+  existingSecret: ""
+
+# Ollama configuration
+ollama:
+  enabled: true
+  host: ollama
+  port: 11434
+
+# Environment variables
+env:
+  NODE_ENV: production
+  LOG_LEVEL: info
+  ENABLE_CSP: "true"
+  PROMETHEUS_ENABLED: "true"
+
+# Secrets
+secrets:
+  nextauthSecret: ""
+  jwtSecret: ""
+  databasePassword: ""
+  redisPassword: ""
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus:
+    enabled: true
+    port: 9090
+  grafana:
+    enabled: true
+    port: 3000
+  loki:
+    enabled: true
+    port: 3100
+
+# Backup configuration
+backup:
+  enabled: false
+  schedule: "0 2 * * *"
+  retention: 7
+  storage:
+    type: local
+    path: /backup
+
+# Security
+security:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL

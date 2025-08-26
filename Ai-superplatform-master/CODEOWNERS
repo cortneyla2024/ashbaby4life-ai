@@ -1,0 +1,66 @@
+# Global owners
+* @steward-omni-max/core-team
+
+# Architecture and design decisions
+/docs/architecture/ @steward-omni-max/architects
+/docs/adr/ @steward-omni-max/architects
+/infra/ @steward-omni-max/devops
+
+# Security and privacy
+/docs/security/ @steward-omni-max/security-team
+/packages/guards/ @steward-omni-max/security-team
+/apps/api/src/guards/ @steward-omni-max/security-team
+/apps/api/src/auth/ @steward-omni-max/security-team
+
+# AI and machine learning
+/packages/agents/ @steward-omni-max/ai-team
+/packages/graphs/ @steward-omni-max/ai-team
+/apps/api/src/ai/ @steward-omni-max/ai-team
+/lib/ai/ @steward-omni-max/ai-team
+
+# Frontend and UI
+/apps/web/ @steward-omni-max/frontend-team
+/packages/ui/ @steward-omni-max/frontend-team
+/apps/ext/ @steward-omni-max/frontend-team
+
+# Backend and API
+/apps/api/ @steward-omni-max/backend-team
+/packages/connectors/ @steward-omni-max/backend-team
+/prisma/ @steward-omni-max/backend-team
+
+# Mobile and desktop
+/apps/mobile/ @steward-omni-max/mobile-team
+/apps/desktop/ @steward-omni-max/desktop-team
+
+# Documentation
+/apps/docs/ @steward-omni-max/docs-team
+/docs/ @steward-omni-max/docs-team
+*.md @steward-omni-max/docs-team
+
+# Configuration and tooling
+/.github/ @steward-omni-max/devops
+/scripts/ @steward-omni-max/devops
+/docker-compose*.yml @steward-omni-max/devops
+/Dockerfile* @steward-omni-max/devops
+/Makefile @steward-omni-max/devops
+
+# Testing and quality
+/__tests__/ @steward-omni-max/qa-team
+/e2e/ @steward-omni-max/qa-team
+/jest.config.js @steward-omni-max/qa-team
+/playwright.config.ts @steward-omni-max/qa-team
+
+# Legal and compliance
+/LICENSE @steward-omni-max/legal-team
+/COPYING.md @steward-omni-max/legal-team
+/NOTICE @steward-omni-max/legal-team
+/profiles/ @steward-omni-max/legal-team
+
+# Data and seeds
+/data/ @steward-omni-max/data-team
+/prisma/seed.ts @steward-omni-max/data-team
+
+# Package management
+/package.json @steward-omni-max/devops
+/pnpm-workspace.yaml @steward-omni-max/devops
+/turbo.json @steward-omni-max/devops

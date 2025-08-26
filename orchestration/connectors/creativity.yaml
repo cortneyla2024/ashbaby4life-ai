@@ -1,0 +1,360 @@
+id: creativity-connector-v1
+name: Creative Studio Connector
+description: Facilitates creative projects, inspiration, and artistic expression
+version: 1.0.0
+category: creative
+priority: 2
+enabled: true
+
+# Connector capabilities
+capabilities:
+  - project_management
+  - inspiration_generation
+  - creative_tools
+  - portfolio_tracking
+  - idea_brainstorming
+  - mood_board_creation
+  - progress_tracking
+  - collaboration_tools
+  - resource_management
+  - creative_analytics
+
+# Data schema
+data_schema:
+  creative_projects:
+    - id: string
+    - user_id: integer
+    - title: string
+    - description: string
+    - category: string
+    - status: string
+    - progress: integer
+    - priority: string
+    - deadline: datetime
+    - created_at: datetime
+    - updated_at: datetime
+    - tags: array
+    - collaborators: array
+  
+  project_assets:
+    - id: string
+    - project_id: string
+    - asset_type: string
+    - file_path: string
+    - file_size: integer
+    - mime_type: string
+    - created_at: datetime
+    - metadata: object
+  
+  inspiration_items:
+    - id: string
+    - user_id: integer
+    - title: string
+    - description: string
+    - source_url: string
+    - image_path: string
+    - category: string
+    - tags: array
+    - created_at: datetime
+  
+  mood_boards:
+    - id: string
+    - user_id: integer
+    - title: string
+    - description: string
+    - items: array
+    - theme: string
+    - created_at: datetime
+    - updated_at: datetime
+  
+  creative_ideas:
+    - id: string
+    - user_id: integer
+    - title: string
+    - description: string
+    - category: string
+    - priority: string
+    - status: string
+    - notes: string
+    - created_at: datetime
+  
+  progress_logs:
+    - id: string
+    - project_id: string
+    - user_id: integer
+    - entry: string
+    - progress_percentage: integer
+    - time_spent: integer
+    - challenges: string
+    - achievements: string
+    - timestamp: datetime
+
+# Configuration options
+config:
+  auto_backup: true
+  collaboration_enabled: false
+  export_formats: ["json", "pdf", "markdown", "html"]
+  version_control: true
+  file_storage_limit: "10GB"
+  backup_frequency: daily
+  compression_enabled: true
+  
+  # Creative categories
+  creative_categories:
+    - visual_arts
+    - writing
+    - music
+    - photography
+    - design
+    - crafts
+    - digital_art
+    - film_video
+    - performance
+    - culinary
+    - gardening
+    - diy_projects
+  
+  # Project statuses
+  project_statuses:
+    - planning
+    - in_progress
+    - review
+    - completed
+    - on_hold
+    - abandoned
+  
+  # Asset types
+  asset_types:
+    - image
+    - video
+    - audio
+    - document
+    - 3d_model
+    - sketch
+    - reference
+    - template
+  
+  # File formats
+  supported_formats:
+    images: ["jpg", "jpeg", "png", "gif", "svg", "webp", "bmp", "tiff"]
+    videos: ["mp4", "avi", "mov", "wmv", "flv", "webm"]
+    audio: ["mp3", "wav", "flac", "aac", "ogg"]
+    documents: ["pdf", "doc", "docx", "txt", "md", "rtf"]
+
+# AI integration
+ai_integration:
+  enabled: true
+  capabilities:
+    - idea_generation
+    - inspiration_suggestions
+    - creative_prompts
+    - style_analysis
+    - progress_insights
+    - collaboration_suggestions
+  
+  prompt_generation: true
+  style_matching: true
+  trend_analysis: true
+  creative_guidance: true
+
+# Privacy and security
+privacy:
+  data_encryption: true
+  local_storage_only: true
+  no_external_sharing: true
+  user_consent_required: true
+  data_minimization: true
+  retention_policy:
+    projects: 1825
+    assets: 1825
+    inspiration: 365
+    mood_boards: 730
+    ideas: 365
+    progress_logs: 365
+
+# User interface
+ui:
+  dashboard_enabled: true
+  project_gallery: true
+  inspiration_feed: true
+  mood_board_creator: true
+  progress_tracker: true
+  collaboration_space: true
+  
+  # Dashboard widgets
+  widgets:
+    - project_overview
+    - recent_activity
+    - inspiration_feed
+    - progress_charts
+    - upcoming_deadlines
+    - creative_stats
+    - collaboration_updates
+    - resource_usage
+
+# Notifications
+notifications:
+  project_updates: true
+  deadline_reminders: true
+  inspiration_alerts: true
+  collaboration_notifications: true
+  backup_completion: true
+  
+  frequency:
+    project_updates: real_time
+    deadline_reminders: daily
+    inspiration_alerts: weekly
+    collaboration_notifications: real_time
+    backup_completion: daily
+
+# Export capabilities
+export:
+  enabled: true
+  formats:
+    - json
+    - pdf
+    - markdown
+    - html
+    - zip
+    - portfolio_pdf
+  
+  data_types:
+    - projects
+    - assets
+    - inspiration
+    - mood_boards
+    - ideas
+    - progress_logs
+
+# Collaboration features
+collaboration:
+  enabled: false
+  features:
+    - shared_projects
+    - real_time_editing
+    - comment_system
+    - version_history
+    - access_control
+    - activity_feed
+  
+  permissions:
+    - view
+    - edit
+    - comment
+    - share
+    - admin
+
+# Resource management
+resources:
+  storage:
+    local_path: "./storage/creative"
+    max_size: "10GB"
+    compression: true
+    backup_enabled: true
+  
+  templates:
+    enabled: true
+    categories:
+      - project_plans
+      - mood_boards
+      - progress_templates
+      - inspiration_collections
+  
+  tools:
+    - sketch_pad
+    - color_palette_generator
+    - typography_tester
+    - layout_grid
+    - image_editor
+    - audio_recorder
+
+# Integration hooks
+hooks:
+  pre_save:
+    - validate_project_data
+    - compress_assets
+    - apply_privacy_rules
+    - generate_metadata
+  
+  post_save:
+    - update_project_stats
+    - generate_thumbnails
+    - backup_assets
+    - send_notifications
+  
+  pre_delete:
+    - backup_project
+    - check_dependencies
+    - notify_collaborators
+  
+  post_delete:
+    - cleanup_assets
+    - update_statistics
+    - clear_cache
+
+# Performance settings
+performance:
+  caching_enabled: true
+  cache_duration: 7200
+  image_optimization: true
+  lazy_loading: true
+  background_processing: true
+  compression_level: 85
+
+# Error handling
+error_handling:
+  retry_attempts: 3
+  retry_delay: 2000
+  fallback_mode: true
+  error_logging: true
+  user_notification: true
+  auto_recovery: true
+
+# Monitoring
+monitoring:
+  enabled: true
+  metrics:
+    - project_completion_rate
+    - asset_usage
+    - user_engagement
+    - storage_utilization
+    - system_performance
+  
+  alerts:
+    - storage_limit_warning
+    - backup_failure
+    - project_deadline_approaching
+    - system_error
+
+# Version control
+version_control:
+  enabled: true
+  backup_frequency: daily
+  version_history: 50
+  rollback_enabled: true
+  migration_support: true
+  auto_backup: true
+
+# Creative tools integration
+creative_tools:
+  sketch_pad:
+    enabled: true
+    canvas_size: "800x600"
+    brush_types: ["pencil", "pen", "marker", "brush"]
+    color_palette: true
+  
+  color_palette_generator:
+    enabled: true
+    algorithm: "k_means"
+    max_colors: 8
+    export_formats: ["hex", "rgb", "hsl"]
+  
+  typography_tester:
+    enabled: true
+    font_families: ["Arial", "Helvetica", "Times", "Georgia"]
+    preview_text: "The quick brown fox jumps over the lazy dog"
+  
+  layout_grid:
+    enabled: true
+    grid_types: ["12-column", "16-column", "golden-ratio"]
+    responsive: true

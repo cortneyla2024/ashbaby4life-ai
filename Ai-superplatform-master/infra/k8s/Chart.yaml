@@ -1,0 +1,17 @@
+apiVersion: v2
+name: steward-omni-max
+description: A Helm chart for steward-omni-max - Hope: The Steward – Omni Max
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - ai
+  - privacy
+  - self-hosted
+  - automation
+home: https://github.com/your-org/steward-omni-max
+sources:
+  - https://github.com/your-org/steward-omni-max
+maintainers:
+  - name: steward-omni-max team
+    email: team@steward-omni-max.org

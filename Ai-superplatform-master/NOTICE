@@ -1,0 +1,35 @@
+steward-omni-max - Hope: The Steward – Omni Max
+Copyright (C) 2024 The steward-omni-max Contributors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+Third-party software included in this distribution:
+
+- Next.js (MIT License) - https://nextjs.org/
+- React (MIT License) - https://reactjs.org/
+- TypeScript (Apache-2.0 License) - https://www.typescriptlang.org/
+- Tailwind CSS (MIT License) - https://tailwindcss.com/
+- Prisma (Apache-2.0 License) - https://www.prisma.io/
+- PostgreSQL (PostgreSQL License) - https://www.postgresql.org/
+- Redis (BSD-3-Clause License) - https://redis.io/
+- Ollama (MIT License) - https://ollama.ai/
+- NestJS (MIT License) - https://nestjs.com/
+- Docusaurus (MIT License) - https://docusaurus.io/
+- TurboRepo (MIT License) - https://turbo.build/
+- pnpm (MIT License) - https://pnpm.io/
+
+For a complete list of dependencies and their licenses, see the package.json files
+in each package directory and run `pnpm licenses` to view all licenses.

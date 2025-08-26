@@ -1,0 +1,337 @@
+# =============================================================================
+# CareConnect v5.0 Docker Compose Configuration
+# =============================================================================
+
+version: '3.8'
+
+services:
+  # =============================================================================
+  # Frontend Service
+  # =============================================================================
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: frontend-builder
+    container_name: careconnect-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_AI_URL=http://localhost:3002
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+    depends_on:
+      - backend
+      - ai-engine
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # =============================================================================
+  # Backend Service
+  # =============================================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: backend-builder
+    container_name: careconnect-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DB_PATH=/app/data/careconnect.db
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - SESSION_SECRET=${SESSION_SECRET:-another-super-secret-session-key-change-this}
+      - AI_ENGINE_URL=http://ai-engine:3002
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+    depends_on:
+      - ai-engine
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # =============================================================================
+  # AI Engine Service
+  # =============================================================================
+  ai-engine:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ai-builder
+    container_name: careconnect-ai-engine
+    ports:
+      - "3002:3002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - AI_MODEL_PATH=/app/ai-core/checkpoints/steward-v5.pt
+      - AI_BATCH_SIZE=4
+      - AI_MAX_LENGTH=2048
+      - AI_TEMPERATURE=0.7
+      - AI_TOP_P=0.9
+    volumes:
+      - ./ai-core/checkpoints:/app/ai-core/checkpoints
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          memory: 2G
+          cpus: '1.0'
+
+  # =============================================================================
+  # Redis Cache Service (Optional)
+  # =============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: careconnect-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - cache
+
+  # =============================================================================
+  # PostgreSQL Database Service (Optional)
+  # =============================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: careconnect-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=careconnect
+      - POSTGRES_USER=careconnect
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-careconnect_password}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U careconnect"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    profiles:
+      - database
+
+  # =============================================================================
+  # Nginx Reverse Proxy (Optional)
+  # =============================================================================
+  nginx:
+    image: nginx:alpine
+    container_name: careconnect-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+      - ai-engine
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    profiles:
+      - proxy
+
+  # =============================================================================
+  # Monitoring Service (Optional)
+  # =============================================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: careconnect-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: careconnect-grafana
+    ports:
+      - "3003:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+  # =============================================================================
+  # Development Services
+  # =============================================================================
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: careconnect-frontend-dev
+    ports:
+      - "3000:3000"
+      - "9229:9229"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - REACT_APP_API_URL=http://localhost:3001
+      - REACT_APP_AI_URL=http://localhost:3002
+    volumes:
+      - ./frontend:/app/frontend
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - /app/frontend/node_modules
+    depends_on:
+      - backend-dev
+      - ai-engine-dev
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: careconnect-backend-dev
+    ports:
+      - "3001:3001"
+      - "9229:9229"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DB_PATH=/app/data/careconnect.db
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+      - SESSION_SECRET=${SESSION_SECRET:-another-super-secret-session-key-change-this}
+      - AI_ENGINE_URL=http://ai-engine-dev:3002
+    volumes:
+      - ./backend:/app/backend
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+      - ./backups:/app/backups
+      - /app/backend/node_modules
+    depends_on:
+      - ai-engine-dev
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+  ai-engine-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: careconnect-ai-engine-dev
+    ports:
+      - "3002:3002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - AI_MODEL_PATH=/app/ai-core/checkpoints/steward-v5.pt
+      - AI_BATCH_SIZE=4
+      - AI_MAX_LENGTH=2048
+      - AI_TEMPERATURE=0.7
+      - AI_TOP_P=0.9
+    volumes:
+      - ./ai-core:/app/ai-core
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - careconnect-network
+    restart: unless-stopped
+    profiles:
+      - dev
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  careconnect-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# =============================================================================
+# Volumes
+# =============================================================================
+volumes:
+  redis-data:
+    driver: local
+  postgres-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

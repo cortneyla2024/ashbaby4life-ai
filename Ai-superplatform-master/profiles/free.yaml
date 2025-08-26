@@ -1,0 +1,45 @@
+---
+license: AGPL-3.0
+profiles:
+  ai:
+    external_models_enabled: false
+    allowed_model_licenses: [MIT, Apache-2.0, BSD-3-Clause, MPL-2.0]
+    default_models:
+      llm: "mistral:7b-instruct"
+      embed: "all-minilm"
+      vision: "clip-vit-b32"
+  connectors:
+    paid_integrations_enabled: false
+    enabled:
+      - local_vault
+      - webdav
+      - caldav
+      - carddav
+      - matrix
+      - smtp
+      - imap
+      - activitypub
+      - rss
+      - gitea
+      - prometheus
+      - grafana
+      - loki
+      - home_assistant
+      - valhalla
+      - nominatim
+      - uptime_kuma
+  ops:
+    auto_update: true
+    rollout_strategy: canary
+    canary_traffic_percent: 10
+    auto_rollback: true
+    cve_scan_schedule: "daily 03:00"
+    backup_schedule: "hourly incremental, daily full"
+  privacy:
+    telemetry: off
+    data_minimization: strict
+    consent_required_for_write: true
+  offline_first:
+    enable: true
+    cache_packages: true
+    local_docs: true
