@@ -9,8 +9,7 @@ interface Transaction {
   date: Date;
   tags: string[];
   accountId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  timestamp: Date;
 }
 
 interface Budget {
@@ -22,8 +21,7 @@ interface Budget {
   period: 'monthly' | 'yearly' | 'weekly';
   startDate: Date;
   endDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  timestamp: Date;
 }
 
 interface Account {
@@ -34,8 +32,7 @@ interface Account {
   currency: string;
   institution: string;
   accountNumber?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  timestamp: Date;
 }
 
 interface FinanceContextType {
@@ -47,13 +44,13 @@ interface FinanceContextType {
   setAccounts: (accounts: Account[]) => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Transaction>;
+  addTransaction: (transaction: Omit<Transaction, 'id' | 'timestamp'>) => Promise<Transaction>;
   updateTransaction: (transactionId: string, updates: Partial<Transaction>) => Promise<void>;
   deleteTransaction: (transactionId: string) => Promise<void>;
-  createBudget: (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Budget>;
+  createBudget: (budget: Omit<Budget, 'id' | 'timestamp'>) => Promise<Budget>;
   updateBudget: (budgetId: string, updates: Partial<Budget>) => Promise<void>;
   deleteBudget: (budgetId: string) => Promise<void>;
-  addAccount: (account: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>) => Promise<Account>;
+  addAccount: (account: Omit<Account, 'id' | 'timestamp'>) => Promise<Account>;
   updateAccount: (accountId: string, updates: Partial<Account>) => Promise<void>;
   deleteAccount: (accountId: string) => Promise<void>;
   getFinancialStats: () => Promise<any>;
@@ -80,7 +77,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>): Promise<Transaction> => {
+  const addTransaction = useCallback(async (transaction: Omit<Transaction, 'id' | 'timestamp'>): Promise<Transaction> => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -89,8 +86,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       const newTransaction: Transaction = {
         ...transaction,
         id: `transaction-${Date.now()}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        timestamp: new Date(),
       };
       
       setTransactions(prev => [...prev, newTransaction]);
@@ -112,7 +108,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       setTransactions(prev =>
         prev.map(transaction =>
           transaction.id === transactionId
-            ? { ...transaction, ...updates, updatedAt: new Date() }
+            ? { ...transaction, ...updates, timestamp: new Date() }
             : transaction
         )
       );
@@ -139,7 +135,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     }
   }, []);
 
-  const createBudget = useCallback(async (budget: Omit<Budget, 'id' | 'createdAt' | 'updatedAt'>): Promise<Budget> => {
+  const createBudget = useCallback(async (budget: Omit<Budget, 'id' | 'timestamp'>): Promise<Budget> => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -148,8 +144,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       const newBudget: Budget = {
         ...budget,
         id: `budget-${Date.now()}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        timestamp: new Date(),
       };
       
       setBudgets(prev => [...prev, newBudget]);
@@ -171,7 +166,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       setBudgets(prev =>
         prev.map(budget =>
           budget.id === budgetId
-            ? { ...budget, ...updates, updatedAt: new Date() }
+            ? { ...budget, ...updates, timestamp: new Date() }
             : budget
         )
       );
@@ -198,7 +193,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
     }
   }, []);
 
-  const addAccount = useCallback(async (account: Omit<Account, 'id' | 'createdAt' | 'updatedAt'>): Promise<Account> => {
+  const addAccount = useCallback(async (account: Omit<Account, 'id' | 'timestamp'>): Promise<Account> => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -207,8 +202,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       const newAccount: Account = {
         ...account,
         id: `account-${Date.now()}`,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        timestamp: new Date(),
       };
       
       setAccounts(prev => [...prev, newAccount]);
@@ -230,7 +224,7 @@ export const FinanceProvider: React.FC<FinanceProviderProps> = ({ children }) =>
       setAccounts(prev =>
         prev.map(account =>
           account.id === accountId
-            ? { ...account, ...updates, updatedAt: new Date() }
+            ? { ...account, ...updates, timestamp: new Date() }
             : account
         )
       );

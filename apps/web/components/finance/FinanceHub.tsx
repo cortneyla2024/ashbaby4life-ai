@@ -21,8 +21,7 @@ interface Transaction {
   date: Date;
   tags: string[];
   accountId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  timestamp: Date;
 }
 
 interface Budget {
@@ -34,8 +33,7 @@ interface Budget {
   period: 'monthly' | 'yearly' | 'weekly';
   startDate: Date;
   endDate: Date;
-  createdAt: Date;
-  updatedAt: Date;
+  timestamp: Date;
 }
 
 interface Investment {
@@ -99,7 +97,7 @@ export const FinanceHub: React.FC = () => {
 
   const handleAddTransaction = useCallback(async (transaction: Partial<Transaction>) => {
     try {
-      await addTransaction(transaction as Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>);
+      await addTransaction(transaction as Omit<Transaction, 'id' | 'timestamp'>);
       setShowAddModal(false);
       addNotification({ type: 'success', title: 'Success', message: 'Transaction added successfully!' });
     } catch (error) {
