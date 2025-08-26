@@ -19,11 +19,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('http://localhost:3000'),
+  metadataBase: new URL('https://ashbaby4life.website'),
   openGraph: {
     title: 'CareConnect v5.0 - The Steward',
     description: 'A comprehensive, privacy-first, offline-capable care ecosystem',
-    url: 'http://localhost:3000',
+    url: 'https://ashbaby4life.website',
     siteName: 'CareConnect',
     images: [
       {
@@ -57,7 +57,7 @@ export const metadata: Metadata = {
     google: 'your-google-verification-code',
   },
   alternates: {
-    canonical: 'http://localhost:3000',
+    canonical: 'https://ashbaby4life.website',
   },
 };
 
@@ -91,8 +91,8 @@ export default function RootLayout({
         <meta httpEquiv="Referrer-Policy" content="strict-origin-when-cross-origin" />
         
         {/* Privacy */}
-        <meta name="robots" content="noindex, nofollow" />
-        <meta name="googlebot" content="noindex, nofollow" />
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
       </head>
       <body className={inter.className}>
         <Providers>
