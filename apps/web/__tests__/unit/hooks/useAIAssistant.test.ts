@@ -207,6 +207,9 @@ describe('useAIAssistant', () => {
       conv1 = await result.current.createConversation();
     });
     
+    // Add a small delay to ensure different timestamps
+    await new Promise(resolve => setTimeout(resolve, 10));
+    
     await act(async () => {
       conv2 = await result.current.createConversation();
     });

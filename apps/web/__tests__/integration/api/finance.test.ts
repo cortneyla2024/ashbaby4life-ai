@@ -1,4 +1,17 @@
-import { NextRequest } from 'next/server';
+// Mock NextRequest to avoid import issues
+const mockNextRequest = jest.fn().mockImplementation((url: string, options?: any) => ({
+  url,
+  method: options?.method || 'GET',
+  body: options?.body,
+  headers: new Map(Object.entries(options?.headers || {})),
+  nextUrl: new URL(url),
+}));
+
+// Mock the NextRequest constructor
+jest.mock('next/server', () => ({
+  NextRequest: mockNextRequest,
+}));
+
 import { GET, POST, PUT, DELETE } from '@/app/api/finance/budget/route';
 import { GET as GET_TRANSACTION, POST as POST_TRANSACTION } from '@/app/api/finance/transaction/route';
 
@@ -43,7 +56,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/budget', {
+      const request = mockNextRequest('http://localhost:3000/api/finance/budget', {
         method: 'POST',
         body: JSON.stringify({
           name: 'Monthly Budget',
@@ -84,7 +97,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/budget?userId=user123');
+      const request = mockNextRequest('http://localhost:3000/api/finance/budget?userId=user123');
       const response = await GET(request);
       const data = await response.json();
 
@@ -113,7 +126,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/budget/1', {
+      const request = mockNextRequest('http://localhost:3000/api/finance/budget/1', {
         method: 'PUT',
         body: JSON.stringify({
           name: 'Updated Budget',
@@ -140,7 +153,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/budget/1', {
+      const request = mockNextRequest('http://localhost:3000/api/finance/budget/1', {
         method: 'DELETE',
       });
 
@@ -177,7 +190,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/transaction', {
+      const request = mockNextRequest('http://localhost:3000/api/finance/transaction', {
         method: 'POST',
         body: JSON.stringify({
           amount: 100,
@@ -221,7 +234,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/transaction?userId=user123');
+      const request = mockNextRequest('http://localhost:3000/api/finance/transaction?userId=user123');
       const response = await GET_TRANSACTION(request);
       const data = await response.json();
 
@@ -239,7 +252,7 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = new NextRequest('http://localhost:3000/api/finance/budget', {
+      const request = mockNextRequest('http://localhost:3000/api/finance/budget', {
         method: 'POST',
         body: JSON.stringify({
           name: 'Test Budget',
@@ -259,7 +272,7 @@ describe('Finance API Routes', () => {
     });
 
     it('should validate required fields', async () => {
-      const request = new NextRequest('http://localhost:3000/api/finance/budget', {
+      const request = mockNextRequest('http://localhost:3000/api/finance/budget', {
         method: 'POST',
         body: JSON.stringify({
           // Missing required fields
