@@ -1,19 +1,9 @@
-// Mock NextRequest to avoid import issues
-const mockNextRequest = jest.fn().mockImplementation((url: string, options?: any) => ({
-  url,
-  method: options?.method || 'GET',
-  body: options?.body,
-  headers: new Map(Object.entries(options?.headers || {})),
-  nextUrl: new URL(url),
+// Mock the Vercel error prevention system first
+jest.mock('@/lib/vercel-error-prevention', () => ({
+  handleApiRoute: jest.fn().mockImplementation(async (request: any, operation: any) => {
+    return await operation();
+  }),
 }));
-
-// Mock the NextRequest constructor
-jest.mock('next/server', () => ({
-  NextRequest: mockNextRequest,
-}));
-
-import { GET, POST, PUT, DELETE } from '@/app/api/finance/budget/route';
-import { GET as GET_TRANSACTION, POST as POST_TRANSACTION } from '@/app/api/finance/transaction/route';
 
 // Mock Prisma client
 jest.mock('@prisma/client', () => ({
@@ -27,6 +17,19 @@ jest.mock('@prisma/client', () => ({
     },
   })),
 }));
+
+// Mock Response for API routes
+global.Response = {
+  json: jest.fn().mockImplementation((data: any) => ({
+    json: () => Promise.resolve(data),
+    status: 200,
+    headers: new Map(),
+  })),
+} as any;
+
+// Now import the API routes
+import { GET, POST, PUT, DELETE } from '@/app/api/finance/budget/route';
+import { GET as GET_TRANSACTION, POST as POST_TRANSACTION } from '@/app/api/finance/transaction/route';
 
 describe('Finance API Routes', () => {
   let mockPrisma: any;
@@ -56,17 +59,21 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/budget', {
+      const request = {
+        url: 'http://localhost:3000/api/finance/budget',
         method: 'POST',
         body: JSON.stringify({
           name: 'Monthly Budget',
           amount: 1000,
           category: 'general'
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        headers: new Map([['content-type', 'application/json']]),
+        json: () => Promise.resolve({
+          name: 'Monthly Budget',
+          amount: 1000,
+          category: 'general'
+        }),
+      } as any;
 
       const response = await POST(request);
       const data = await response.json();
@@ -84,7 +91,7 @@ describe('Finance API Routes', () => {
           data: JSON.stringify({
             name: 'Monthly Budget',
             amount: 1000,
-            spent: 500,
+            spent: 300,
             category: 'general'
           }),
           timestamp: new Date()
@@ -97,7 +104,12 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/budget?userId=user123');
+      const request = {
+        url: 'http://localhost:3000/api/finance/budget?userId=user123',
+        method: 'GET',
+        headers: new Map(),
+      } as any;
+
       const response = await GET(request);
       const data = await response.json();
 
@@ -107,13 +119,13 @@ describe('Finance API Routes', () => {
     });
 
     it('should update a budget', async () => {
-      const mockUpdatedBudget = {
+      const mockBudget = {
         id: '1',
         userId: 'user123',
         data: JSON.stringify({
           name: 'Updated Budget',
-          amount: 1500,
-          spent: 750,
+          amount: 1200,
+          spent: 400,
           category: 'general'
         }),
         timestamp: new Date()
@@ -121,21 +133,25 @@ describe('Finance API Routes', () => {
 
       mockPrisma.mockImplementation(() => ({
         financialData: {
-          findUnique: jest.fn().mockResolvedValue(mockUpdatedBudget),
-          update: jest.fn().mockResolvedValue(mockUpdatedBudget),
+          update: jest.fn().mockResolvedValue(mockBudget),
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/budget/1', {
+      const request = {
+        url: 'http://localhost:3000/api/finance/budget/1',
         method: 'PUT',
         body: JSON.stringify({
           name: 'Updated Budget',
-          amount: 1500
+          amount: 1200,
+          category: 'general'
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        headers: new Map([['content-type', 'application/json']]),
+        json: () => Promise.resolve({
+          name: 'Updated Budget',
+          amount: 1200,
+          category: 'general'
+        }),
+      } as any;
 
       const response = await PUT(request);
       const data = await response.json();
@@ -148,14 +164,15 @@ describe('Finance API Routes', () => {
     it('should delete a budget', async () => {
       mockPrisma.mockImplementation(() => ({
         financialData: {
-          findUnique: jest.fn().mockResolvedValue({ id: '1' }),
           delete: jest.fn().mockResolvedValue({ id: '1' }),
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/budget/1', {
+      const request = {
+        url: 'http://localhost:3000/api/finance/budget/1',
         method: 'DELETE',
-      });
+        headers: new Map(),
+      } as any;
 
       const response = await DELETE(request);
       const data = await response.json();
@@ -173,9 +190,9 @@ describe('Finance API Routes', () => {
         data: JSON.stringify({
           amount: 100,
           description: 'Grocery shopping',
-          category: 'food',
           type: 'expense',
-          date: new Date().toISOString()
+          category: 'food',
+          date: new Date()
         }),
         timestamp: new Date()
       };
@@ -183,26 +200,26 @@ describe('Finance API Routes', () => {
       mockPrisma.mockImplementation(() => ({
         financialData: {
           create: jest.fn().mockResolvedValue(mockTransaction),
-          findUnique: jest.fn().mockResolvedValue({
-            data: JSON.stringify({ spent: 0, amount: 1000 })
-          }),
-          update: jest.fn().mockResolvedValue({}),
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/transaction', {
+      const request = {
+        url: 'http://localhost:3000/api/finance/transaction',
         method: 'POST',
         body: JSON.stringify({
           amount: 100,
           description: 'Grocery shopping',
-          category: 'food',
           type: 'expense',
-          budgetId: 'budget1'
+          category: 'food'
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        headers: new Map([['content-type', 'application/json']]),
+        json: () => Promise.resolve({
+          amount: 100,
+          description: 'Grocery shopping',
+          type: 'expense',
+          category: 'food'
+        }),
+      } as any;
 
       const response = await POST_TRANSACTION(request);
       const data = await response.json();
@@ -220,9 +237,9 @@ describe('Finance API Routes', () => {
           data: JSON.stringify({
             amount: 100,
             description: 'Grocery shopping',
-            category: 'food',
             type: 'expense',
-            date: new Date().toISOString()
+            category: 'food',
+            date: new Date()
           }),
           timestamp: new Date()
         }
@@ -234,7 +251,12 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/transaction?userId=user123');
+      const request = {
+        url: 'http://localhost:3000/api/finance/transaction?userId=user123',
+        method: 'GET',
+        headers: new Map(),
+      } as any;
+
       const response = await GET_TRANSACTION(request);
       const data = await response.json();
 
@@ -252,16 +274,21 @@ describe('Finance API Routes', () => {
         },
       }));
 
-      const request = mockNextRequest('http://localhost:3000/api/finance/budget', {
+      const request = {
+        url: 'http://localhost:3000/api/finance/budget',
         method: 'POST',
         body: JSON.stringify({
           name: 'Test Budget',
-          amount: 1000
+          amount: 1000,
+          category: 'general'
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        headers: new Map([['content-type', 'application/json']]),
+        json: () => Promise.resolve({
+          name: 'Test Budget',
+          amount: 1000,
+          category: 'general'
+        }),
+      } as any;
 
       const response = await POST(request);
       const data = await response.json();
@@ -272,15 +299,17 @@ describe('Finance API Routes', () => {
     });
 
     it('should validate required fields', async () => {
-      const request = mockNextRequest('http://localhost:3000/api/finance/budget', {
+      const request = {
+        url: 'http://localhost:3000/api/finance/budget',
         method: 'POST',
         body: JSON.stringify({
           // Missing required fields
         }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+        headers: new Map([['content-type', 'application/json']]),
+        json: () => Promise.resolve({
+          // Missing required fields
+        }),
+      } as any;
 
       const response = await POST(request);
       const data = await response.json();
