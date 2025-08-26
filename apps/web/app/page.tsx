@@ -93,30 +93,16 @@ export default function HomePage() {
               </Link>
             </Card>
 
-            {/* Health Tracking */}
+            {/* Medical Hub */}
             <Card className="p-6 hover:shadow-lg transition-shadow">
               <div className="text-3xl mb-4">🏥</div>
-              <h3 className="text-xl font-semibold mb-2">Health Tracking</h3>
+              <h3 className="text-xl font-semibold mb-2">Medical Hub</h3>
               <p className="text-gray-600 mb-4">
-                Monitor your health, mood, and wellness with AI-powered insights.
+                AI-powered healthcare with telehealth, diagnostics, and appointment scheduling.
               </p>
-              <Link href="/health">
+              <Link href="/medical">
                 <Button variant="outline" className="w-full">
-                  Track Health
-                </Button>
-              </Link>
-            </Card>
-
-            {/* Learning Platform */}
-            <Card className="p-6 hover:shadow-lg transition-shadow">
-              <div className="text-3xl mb-4">📚</div>
-              <h3 className="text-xl font-semibold mb-2">Learning Platform</h3>
-              <p className="text-gray-600 mb-4">
-                Knowledge graph and learning tools for continuous education.
-              </p>
-              <Link href="/learning">
-                <Button variant="outline" className="w-full">
-                  Start Learning
+                  Medical Services
                 </Button>
               </Link>
             </Card>
@@ -126,11 +112,53 @@ export default function HomePage() {
               <div className="text-3xl mb-4">👨‍👩‍👧‍👦</div>
               <h3 className="text-xl font-semibold mb-2">Family Admin</h3>
               <p className="text-gray-600 mb-4">
-                Manage family connections, permissions, and shared resources.
+                Multi-admin family management with child protection and AI-guided communication.
               </p>
               <Link href="/family">
                 <Button variant="outline" className="w-full">
                   Family Management
+                </Button>
+              </Link>
+            </Card>
+
+            {/* Education Hub */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="text-3xl mb-4">🎓</div>
+              <h3 className="text-xl font-semibold mb-2">Education Hub</h3>
+              <p className="text-gray-600 mb-4">
+                AI-powered learning with personalized teaching, avatars, and video conferencing.
+              </p>
+              <Link href="/education">
+                <Button variant="outline" className="w-full">
+                  Start Learning
+                </Button>
+              </Link>
+            </Card>
+
+            {/* Creativity Hub */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="text-3xl mb-4">🎨</div>
+              <h3 className="text-xl font-semibold mb-2">Creativity Hub</h3>
+              <p className="text-gray-600 mb-4">
+                AI-powered creative expression with collaborative tools and generative content.
+              </p>
+              <Link href="/creativity">
+                <Button variant="outline" className="w-full">
+                  Create & Collaborate
+                </Button>
+              </Link>
+            </Card>
+
+            {/* Governance Hub */}
+            <Card className="p-6 hover:shadow-lg transition-shadow">
+              <div className="text-3xl mb-4">⚖️</div>
+              <h3 className="text-xl font-semibold mb-2">Governance Hub</h3>
+              <p className="text-gray-600 mb-4">
+                Privacy-first, ethical, and inclusive governance for finance and social communities.
+              </p>
+              <Link href="/governance">
+                <Button variant="outline" className="w-full">
+                  Governance & Ethics
                 </Button>
               </Link>
             </Card>
