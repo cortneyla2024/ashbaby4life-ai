@@ -171,4 +171,47 @@ describe('useAIAssistant', () => {
     expect(result.current.conversations[0].title).toBe('Conversation 1');
     expect(result.current.conversations[1].title).toBe('Conversation 2');
   });
+
+  it('should handle concurrent message sending', async () => {
+    const { result } = renderHook(() => useAIAssistant());
+
+    let conversationId: string;
+
+    // Create a conversation
+    await act(async () => {
+      const conversation = await result.current.createConversation();
+      conversationId = conversation.id;
+    });
+
+    // Send multiple messages concurrently
+    await act(async () => {
+      const promises = [
+        result.current.sendMessage(conversationId!, 'Message 1'),
+        result.current.sendMessage(conversationId!, 'Message 2'),
+        result.current.sendMessage(conversationId!, 'Message 3')
+      ];
+      await Promise.all(promises);
+    });
+
+    const conversation = result.current.conversations.find(c => c.id === conversationId);
+    expect(conversation?.messages).toHaveLength(6); // 3 user messages + 3 AI responses
+    expect(result.current.loading).toBe(false);
+  });
+
+  it('should create conversations with unique IDs', async () => {
+    const { result } = renderHook(() => useAIAssistant());
+
+    let conv1: any, conv2: any;
+    
+    await act(async () => {
+      conv1 = await result.current.createConversation();
+    });
+    
+    await act(async () => {
+      conv2 = await result.current.createConversation();
+    });
+
+    expect(conv1.id).not.toBe(conv2.id);
+    expect(result.current.conversations).toHaveLength(2);
+  });
 });
