@@ -1,5 +1,5 @@
 import { handleApiRoute } from '@/lib/vercel-error-prevention';
-import { prisma } from '@/lib/prisma';
+import { prisma } from '@/lib/db';
 
 export async function GET(request: Request) {
   return handleApiRoute(
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
           type: 'budget'
         },
         orderBy: {
-          createdAt: 'desc'
+          timestamp: 'desc'
         }
       });
 
@@ -58,7 +58,7 @@ export async function PUT(request: Request) {
         where: { id: body.id },
         data: {
           data: JSON.stringify(body),
-          updatedAt: new Date()
+          timestamp: new Date()
         }
       });
 
