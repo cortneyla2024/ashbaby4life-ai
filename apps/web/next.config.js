@@ -4,9 +4,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
   },
   trailingSlash: false,
-  generateBuildId: async () => {
-    return 'build-' + Date.now();
-  },
+
   images: {
     domains: [
       'localhost',
