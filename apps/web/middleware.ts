@@ -2,8 +2,20 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Simple middleware that just passes through all requests
-  // This ensures no routing interference
+  // Get the pathname of the request (e.g. /, /dashboard, /api/health)
+  const path = request.nextUrl.pathname;
+
+  // Handle API routes
+  if (path.startsWith('/api/')) {
+    return NextResponse.next();
+  }
+
+  // Handle static files
+  if (path.startsWith('/_next/') || path.startsWith('/favicon') || path.includes('.')) {
+    return NextResponse.next();
+  }
+
+  // For all other routes, let Next.js handle them
   return NextResponse.next();
 }
 

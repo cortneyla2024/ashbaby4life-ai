@@ -4,6 +4,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ['@prisma/client', 'bcryptjs'],
   },
   trailingSlash: false,
+  output: 'standalone',
 
   images: {
     domains: [
@@ -61,6 +62,31 @@ const nextConfig = {
       {
         source: '/api/auth/:path*',
         destination: '/api/auth/:path*',
+      },
+      {
+        source: '/api/finance/:path*',
+        destination: '/api/finance/:path*',
+      },
+      {
+        source: '/api/health/:path*',
+        destination: '/api/health/:path*',
+      },
+      {
+        source: '/api/mental-health/:path*',
+        destination: '/api/mental-health/:path*',
+      },
+      {
+        source: '/api/user/:path*',
+        destination: '/api/user/:path*',
+      },
+    ];
+  },
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/',
+        permanent: false,
       },
     ];
   },
