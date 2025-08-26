@@ -1,343 +1,200 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { DashboardHeader } from '@/components/layout/DashboardHeader';
-import { DashboardSidebar } from '@/components/layout/DashboardSidebar';
-import { WelcomeCard } from '@/components/dashboard/WelcomeCard';
-import { ModuleGrid } from '@/components/dashboard/ModuleGrid';
-import { QuickActions } from '@/components/dashboard/QuickActions';
-import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { AIInsights } from '@/components/dashboard/AIInsights';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs';
-import { AIChatInterface } from '@/components/ai/AIChatInterface';
-import { FaceToFaceInterface } from '@/components/ai/FaceToFaceInterface';
-import { DailyMoodTracker } from '@/components/mental-health/DailyMoodTracker';
-import { BudgetTracker } from '@/components/finance/BudgetTracker';
-
-interface Message {
-  id: string;
-  content: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-  persona?: string;
-  reasoning?: string[];
-  suggestions?: string[];
-}
+import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
-  const [chatMessages, setChatMessages] = useState<Message[]>([]);
-  const [isChatLoading, setIsChatLoading] = useState(false);
-  const [isCallActive, setIsCallActive] = useState(false);
-  const [currentPersona, setCurrentPersona] = useState('balanced');
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-6">
+            <div className="flex items-center">
+              <Link href="/" className="text-2xl font-bold text-gray-900">
+                CareConnect v5.0
+              </Link>
+              <Badge variant="secondary" className="ml-3">
+                Dashboard
+              </Badge>
+            </div>
+            <div className="flex space-x-4">
+              <Link href="/ai-assistant">
+                <Button>AI Assistant</Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
 
-  // Mock data for demonstration
-  const [budgets, setBudgets] = useState([]);
-  const [transactions, setTransactions] = useState([]);
-  const [moodData, setMoodData] = useState({
-    todayEntry: null,
-    weeklyData: []
-  });
-
-  useEffect(() => {
-    if (user) {
-      // Load user data
-      loadUserData();
-    }
-  }, [user]);
-
-  const loadUserData = async () => {
-    // In a real implementation, this would fetch data from APIs
-    console.log('Loading user data...');
-  };
-
-  const handleSendMessage = async (message: string, persona?: string) => {
-    if (!message.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: message,
-      sender: 'user',
-      timestamp: new Date()
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setIsChatLoading(true);
-
-    try {
-      const response = await fetch('/api/ai/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          persona: persona || currentPersona
-        })
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        const aiMessage: Message = {
-          id: (Date.now() + 1).toString(),
-          content: data.response.content,
-          sender: 'ai',
-          timestamp: new Date(),
-          persona: data.response.persona,
-          reasoning: data.response.reasoning,
-          suggestions: data.response.suggestions
-        };
-
-        setChatMessages(prev => [...prev, aiMessage]);
-        setCurrentPersona(data.response.persona);
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  const handleSaveMood = async (moodData: any) => {
-    try {
-      const response = await fetch('/api/mental-health/mood', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(moodData)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        console.log('Mood saved successfully');
-        // Refresh mood data
-        loadUserData();
-      }
-    } catch (error) {
-      console.error('Error saving mood:', error);
-    }
-  };
-
-  const handleAddBudget = async (budget: any) => {
-    try {
-      const response = await fetch('/api/finance/budget', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(budget)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        console.log('Budget added successfully');
-        // Refresh budget data
-        loadUserData();
-      }
-    } catch (error) {
-      console.error('Error adding budget:', error);
-    }
-  };
-
-  const handleAddTransaction = async (transaction: any) => {
-    try {
-      const response = await fetch('/api/finance/transaction', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(transaction)
-      });
-
-      const data = await response.json();
-      if (data.success) {
-        console.log('Transaction added successfully');
-        // Refresh transaction data
-        loadUserData();
-      }
-    } catch (error) {
-      console.error('Error adding transaction:', error);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Please log in to access the dashboard
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Welcome to Your Dashboard
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            You need to be authenticated to view this page.
+          <p className="text-gray-600">
+            Access all your platform features and manage your digital life.
           </p>
         </div>
-      </div>
-    );
-  }
 
-  return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <DashboardHeader />
-      
-      <div className="flex">
-        <DashboardSidebar />
-        
-        <main className="flex-1 p-6">
-          <div className="max-w-7xl mx-auto">
-            <Tabs defaultValue={activeTab} className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="ai-chat">AI Chat</TabsTrigger>
-                <TabsTrigger value="video-call">Video Call</TabsTrigger>
-                <TabsTrigger value="mental-health">Mental Health</TabsTrigger>
-                <TabsTrigger value="finance">Finance</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+            <div className="text-3xl mb-4">🤖</div>
+            <h3 className="text-lg font-semibold mb-2">AI Assistant</h3>
+            <p className="text-gray-600 mb-4 text-sm">
+              Get AI-powered help and insights
+            </p>
+            <Link href="/ai-assistant">
+              <Button className="w-full">Open AI Assistant</Button>
+            </Link>
+          </Card>
 
-              <TabsContent value="overview" className="space-y-6">
-                {/* Welcome Section */}
-                <WelcomeCard user={user} />
-                
-                {/* Quick Actions */}
-                <QuickActions />
-                
-                {/* Main Content Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left Column - Modules */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <ModuleGrid />
-                    <RecentActivity />
-                  </div>
-                  
-                  {/* Right Column - AI Insights */}
-                  <div className="space-y-6">
-                    <AIInsights />
-                  </div>
-                </div>
-              </TabsContent>
+          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+            <div className="text-3xl mb-4">💰</div>
+            <h3 className="text-lg font-semibold mb-2">Finance Hub</h3>
+            <p className="text-gray-600 mb-4 text-sm">
+              Manage budgets and transactions
+            </p>
+            <Link href="/finance">
+              <Button className="w-full">Manage Finance</Button>
+            </Link>
+          </Card>
 
-              <TabsContent value="ai-chat" className="h-[calc(100vh-200px)]">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 h-full">
-                  <AIChatInterface
-                    onSendMessage={handleSendMessage}
-                    messages={chatMessages}
-                    isLoading={isChatLoading}
-                    currentPersona={currentPersona}
-                    onPersonaChange={setCurrentPersona}
-                  />
-                </div>
-              </TabsContent>
+          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+            <div className="text-3xl mb-4">🏥</div>
+            <h3 className="text-lg font-semibold mb-2">Health Tracking</h3>
+            <p className="text-gray-600 mb-4 text-sm">
+              Monitor health and wellness
+            </p>
+            <Link href="/health">
+              <Button className="w-full">Track Health</Button>
+            </Link>
+          </Card>
 
-              <TabsContent value="video-call">
-                <FaceToFaceInterface
-                  onStartCall={() => setIsCallActive(true)}
-                  onEndCall={() => setIsCallActive(false)}
-                  isCallActive={isCallActive}
-                  aiPersona={currentPersona}
-                  userAvatar={user.avatar}
-                />
-              </TabsContent>
+          <Card className="p-6 text-center hover:shadow-lg transition-shadow">
+            <div className="text-3xl mb-4">📚</div>
+            <h3 className="text-lg font-semibold mb-2">Learning</h3>
+            <p className="text-gray-600 mb-4 text-sm">
+              Knowledge graph and learning tools
+            </p>
+            <Link href="/learning">
+              <Button className="w-full">Start Learning</Button>
+            </Link>
+          </Card>
+        </div>
 
-              <TabsContent value="mental-health">
-                <DailyMoodTracker
-                  onSaveMood={handleSaveMood}
-                  todayEntry={moodData.todayEntry}
-                  weeklyData={moodData.weeklyData}
-                />
-              </TabsContent>
-
-              <TabsContent value="finance">
-                <BudgetTracker
-                  budgets={budgets}
-                  transactions={transactions}
-                  onAddBudget={handleAddBudget}
-                  onAddTransaction={handleAddTransaction}
-                  onUpdateBudget={async () => {}}
-                />
-              </TabsContent>
-
-              <TabsContent value="settings">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                    Settings
-                  </h2>
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        AI Preferences
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Default AI Persona
-                          </label>
-                          <select
-                            value={currentPersona}
-                            onChange={(e) => setCurrentPersona(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                          >
-                            <option value="balanced">Balanced</option>
-                            <option value="educator">Educator</option>
-                            <option value="therapist">Therapist</option>
-                            <option value="creative">Creative</option>
-                            <option value="legal_advocate">Legal Advocate</option>
-                            <option value="financial_advisor">Financial Advisor</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Notifications
-                      </h3>
-                      <div className="space-y-4">
-                        <label className="flex items-center space-x-3">
-                          <input
-                            type="checkbox"
-                            defaultChecked={user.notifications}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-gray-700 dark:text-gray-300">
-                            Enable notifications
-                          </span>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                        Privacy & Security
-                      </h3>
-                      <div className="space-y-4">
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Your data is encrypted and stored securely. We never share your personal information with third parties.
-                        </p>
-                        <button className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
-                          Delete Account
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+        {/* Platform Status */}
+        <Card className="p-6 mb-8">
+          <h2 className="text-xl font-semibold mb-4">Platform Status</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+              <span className="text-sm text-gray-600">All Systems Operational</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
+              <span className="text-sm text-gray-600">Performance Optimized</span>
+            </div>
+            <div className="flex items-center">
+              <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+              <span className="text-sm text-gray-600">Error Prevention Active</span>
+            </div>
           </div>
-        </main>
-      </div>
+        </Card>
+
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          {/* Family Admin */}
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="text-2xl mb-4">👨‍👩‍👧‍👦</div>
+            <h3 className="text-lg font-semibold mb-2">Family Admin</h3>
+            <p className="text-gray-600 mb-4">
+              Manage family connections, permissions, and shared resources.
+            </p>
+            <Link href="/family">
+              <Button variant="outline" className="w-full">
+                Family Management
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Marketplace */}
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="text-2xl mb-4">🛒</div>
+            <h3 className="text-lg font-semibold mb-2">Marketplace</h3>
+            <p className="text-gray-600 mb-4">
+              Discover and install plugins to extend your platform capabilities.
+            </p>
+            <Link href="/marketplace">
+              <Button variant="outline" className="w-full">
+                Browse Marketplace
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Sync Data */}
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="text-2xl mb-4">🔄</div>
+            <h3 className="text-lg font-semibold mb-2">Data Sync</h3>
+            <p className="text-gray-600 mb-4">
+              Synchronize your data across devices and manage data sovereignty.
+            </p>
+            <Link href="/sync">
+              <Button variant="outline" className="w-full">
+                Manage Sync
+              </Button>
+            </Link>
+          </Card>
+
+          {/* News Hub */}
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="text-2xl mb-4">📰</div>
+            <h3 className="text-lg font-semibold mb-2">News Hub</h3>
+            <p className="text-gray-600 mb-4">
+              Stay informed with personalized news and AI-powered summaries.
+            </p>
+            <Link href="/news">
+              <Button variant="outline" className="w-full">
+                Read News
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Productivity */}
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="text-2xl mb-4">📝</div>
+            <h3 className="text-lg font-semibold mb-2">Productivity</h3>
+            <p className="text-gray-600 mb-4">
+              Notebooks, tasks, and productivity tools for maximum efficiency.
+            </p>
+            <Link href="/productivity">
+              <Button variant="outline" className="w-full">
+                Boost Productivity
+              </Button>
+            </Link>
+          </Card>
+
+          {/* Goals & Badges */}
+          <Card className="p-6 hover:shadow-lg transition-shadow">
+            <div className="text-2xl mb-4">🎯</div>
+            <h3 className="text-lg font-semibold mb-2">Goals & Badges</h3>
+            <p className="text-gray-600 mb-4">
+              Set goals, track progress, and earn badges for achievements.
+            </p>
+            <Link href="/goals">
+              <Button variant="outline" className="w-full">
+                View Goals
+              </Button>
+            </Link>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 }
