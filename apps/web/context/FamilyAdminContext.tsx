@@ -283,7 +283,7 @@ interface FamilyAdminContextType {
   importFamilyData: (data: string, format: 'json' | 'csv') => Promise<void>;
 }
 
-const FamilyAdminContext = createContext<FamilyAdminContextType | undefined>(undefined);
+export const FamilyAdminContext = createContext<FamilyAdminContextType | undefined>(undefined);
 
 // Provider
 export function FamilyAdminProvider({ children }: { children: React.ReactNode }) {

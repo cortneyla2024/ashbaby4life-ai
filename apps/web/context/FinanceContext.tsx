@@ -57,7 +57,7 @@ interface FinanceContextType {
   getBudgetProgress: (budgetId: string) => number;
 }
 
-const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
+export const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 
 export const useFinance = () => {
   const context = useContext(FinanceContext);

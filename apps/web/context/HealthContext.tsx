@@ -172,7 +172,7 @@ interface HealthContextType {
   loadHealthData: () => Promise<void>;
 }
 
-const HealthContext = createContext<HealthContextType | undefined>(undefined);
+export const HealthContext = createContext<HealthContextType | undefined>(undefined);
 
 export function HealthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(healthReducer, initialState);
