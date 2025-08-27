@@ -124,8 +124,9 @@ export const useLocalStorageUtils = () => {
             const testKey = '__storage_test__';
             const testValue = 'x'.repeat(1024 * 1024); // 1MB
             let quota = 0;
+            const maxQuota = 50 * 1024 * 1024; // 50MB max to prevent infinite loop
             
-            while (true) {
+            while (quota < maxQuota) {
                 try {
                     window.localStorage.setItem(testKey + quota, testValue);
                     quota += 1024 * 1024; // 1MB increments
